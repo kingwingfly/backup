@@ -34,11 +34,11 @@ impl std::fmt::Display for FavCoreError {
         match self {
             FavCoreError::AuthError => write!(f, "AuthErr: failed to login or logout"),
             FavCoreError::ParamsError(msg) => write!(f, "{}", msg),
-            FavCoreError::NetworkError(source) => write!(f, "NetworkErr:: {}", source),
+            FavCoreError::NetworkError(source) => write!(f, "NetworkErr: {}", source),
             FavCoreError::Cancel => write!(f, "Ctrl-C cancelled"),
             FavCoreError::UtilsError(source) => write!(f, "UtilsErr: {}", source),
-            FavCoreError::SerdeError(source) => write!(f, "SerdeErr:: {}", source),
-            FavCoreError::SerdePointerNotFound => write!(f, "SerdeErr:: pointer not found"),
+            FavCoreError::SerdeError(source) => write!(f, "SerdeErr: {}", source),
+            FavCoreError::SerdePointerNotFound => write!(f, "SerdeErr: pointer not found"),
             FavCoreError::Json2ProtobufError(source) => write!(f, "ProtobufParseErr: {}", source),
             FavCoreError::ProtobufError(source) => write!(f, "ProtobufError: {}", source),
             FavCoreError::IoError(source) => {

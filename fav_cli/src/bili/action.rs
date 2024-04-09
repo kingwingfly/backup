@@ -155,7 +155,9 @@ pub(super) async fn daemon(interval: u64) -> FavCoreResult<()> {
         );
         tokio::select! {
             _ = tokio::time::sleep(duration) => {
-                pull_all().await.ok();
+                if let Err(e) = pull_all().await {
+                    tracing::error!("{}", e);
+                }
             }
             _ = tokio::signal::ctrl_c() => {
                 info!("Received Ctrl-C, exiting.");
