@@ -1,7 +1,6 @@
-[`fav_core`](https://crates.io/crates/fav_core) is the core library of [`fav`](https://github.com/kingwingfly/fav), which provides the core traits needed to create an app, which fetch your remote favorite sets(lists), and pull tracked resources to local.
+[`fav_core`](https://crates.io/crates/fav_core) is the core library of [`fav`](https://github.com/kingwingfly/fav)(A cli tool to download remote resources and keep a local state in protobuf).
 
-[`fav_utils`](https://crates.io/crates/fav_utils) provides the utilities for [`fav_cli`](https://crates.io/crates/fav_cli), which now only support [bilibili](https://www.bilibili.com)(Like Chinese Youtube).
-
+[`fav_utils`](https://crates.io/crates/fav_utils) provides the utils for [`fav_cli`](https://crates.io/crates/fav_cli), which now only support [bilibili](https://www.bilibili.com)(Like Chinese Youtube). You can see it as a example for using this crate.
 
 All you need is to define data structures with [`protobuf`](https://protobuf.dev) like [this example](https://github.com/kingwingfly/fav/blob/dev/fav_utils/proto/bili.proto).
 
