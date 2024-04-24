@@ -77,6 +77,10 @@ Back up your favorite bilibili online resources with CLI.
 
 ## Getting Started
 
+You can download a release [here](https://github.com/kingwingfly/fav/releases).
+
+For Arch Linux users, you can `sudo pacman -S fav` maybe, someone has maken it a package.
+
 ### Prerequisites
 
 - Install Rust
