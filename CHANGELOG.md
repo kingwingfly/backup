@@ -10,6 +10,11 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+## [0.2.13] - 2024-04-24
+
+- bump dependencies
+- core: improve log
+
 ## [0.2.12] - 2024-04-10
 
 - bump dependencies

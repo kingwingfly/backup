@@ -31,27 +31,27 @@ pub enum FavCoreError {
 
 impl std::fmt::Display for FavCoreError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FavCoreError::AuthError => write!(f, "AuthErr: failed to login or logout"),
-            FavCoreError::ParamsError(msg) => write!(f, "{}", msg),
-            FavCoreError::NetworkError(source) => write!(f, "NetworkErr: {}", source),
-            FavCoreError::Cancel => write!(f, "Ctrl-C cancelled"),
-            FavCoreError::UtilsError(source) => write!(f, "UtilsErr: {}", source),
-            FavCoreError::SerdeError(source) => write!(f, "SerdeErr: {}", source),
-            FavCoreError::SerdePointerNotFound => write!(f, "SerdeErr: pointer not found"),
-            FavCoreError::Json2ProtobufError(source) => write!(f, "ProtobufParseErr: {}", source),
-            FavCoreError::ProtobufError(source) => write!(f, "ProtobufError: {}", source),
+        let hint = match self {
+            FavCoreError::AuthError => "AuthErr: failed to login or logout".to_string(),
+            FavCoreError::ParamsError(msg) => msg.to_string(),
+            FavCoreError::NetworkError(source) => format!("NetworkErr: {}", source),
+            FavCoreError::Cancel => "Ctrl-C cancelled".to_string(),
+            FavCoreError::UtilsError(source) => format!("UtilsErr: {}", source),
+            FavCoreError::SerdeError(source) => format!("SerdeErr: {}", source),
+            FavCoreError::SerdePointerNotFound => "SerdeErr: pointer not found".to_string(),
+            FavCoreError::Json2ProtobufError(source) => format!("ProtobufParseErr: {}", source),
+            FavCoreError::ProtobufError(source) => format!("ProtobufError: {}", source),
             FavCoreError::IoError(source) => {
-                write!(f, "IOErr: {}; Maybe you didn't run `fav init` or have no permission to write .fav", source)
+                format!( "IOErr: {}; Maybe you didn't run `fav init` or have no permission to write .fav", source)
             }
             FavCoreError::IdNotUsable(source) => {
-                write!(
-                    f,
+                format!(
                     "Id<{}> not usable; Or maybe the resource is expired",
                     source
                 )
             }
-        }
+        };
+        write!(f, "{}", hint)
     }
 }
 

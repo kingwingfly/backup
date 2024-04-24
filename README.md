@@ -87,7 +87,6 @@ For Arch Linux users, you can `sudo pacman -S fav` maybe, someone has maken it a
   ```sh
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   ```
-  You may need add some dependencies for protobuf yourself.
 
 ### Compilation
 
