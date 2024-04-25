@@ -112,9 +112,17 @@ impl ResOps for Bili {
             sub_url,
             img_url,
         ];
-        let Dash { audio, video } = self
-            .request_json(ApiKind::Pull, params, "/data/dash")
-            .await?;
+        let Dash { audio, video } =
+            match self.request_json(ApiKind::Pull, params, "/data/dash").await {
+                Ok(dash) => dash,
+                Err(FavCoreError::SerdePointerNotFound) => {
+                    return Err(FavCoreError::IdNotUsable {
+                        id: resource.bvid.clone(),
+                        msg: format!("You may run `fav untrack {}` to fix it", resource.bvid),
+                    })
+                }
+                Err(e) => return Err(e),
+            };
         self.download(resource, vec![audio, video]).await?; // Ctrl-C will be caught in `download`
         resource.on_status(StatusFlags::SAVED);
         Ok(())

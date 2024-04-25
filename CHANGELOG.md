@@ -10,6 +10,12 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+## [0.2.14] - 2024-04-25
+
+- core: FavCoreError will show a message.
+- pull: Sometimes, users may collect paid videos, but have no permission to watch full videos. This lead to a `SerdePointerError`. Fix: a message ask users to untrack the video has been added.
+- development: `fav_utils_old` will no longer be included into workspace.
+
 ## [0.2.13] - 2024-04-24
 
 - bump dependencies
@@ -17,7 +23,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [0.2.12] - 2024-04-10
 
-- bump dependencies
+- bump dependencies.
 - daemon: show error.
 - daemon: performance improvement.
 

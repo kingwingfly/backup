@@ -31,7 +31,10 @@ pub(super) fn status(id: String) -> FavCoreResult<()> {
     } else if let Some(r) = try_find_res(&mut sets, &id_) {
         r.table();
     } else {
-        return Err(FavCoreError::IdNotUsable(id));
+        return Err(FavCoreError::IdNotUsable {
+            id,
+            msg: "ID not found".to_string(),
+        });
     }
     Ok(())
 }
@@ -77,7 +80,10 @@ pub(super) fn track(id: String) -> FavCoreResult<()> {
     } else if let Some(r) = try_find_res(&mut sets, &id_) {
         r.on_status(StatusFlags::TRACK);
     } else {
-        return Err(FavCoreError::IdNotUsable(id));
+        return Err(FavCoreError::IdNotUsable {
+            id,
+            msg: "ID not found".to_string(),
+        });
     }
     sets.write()
 }
@@ -91,7 +97,10 @@ pub(super) fn untrack(id: String) -> FavCoreResult<()> {
     } else if let Some(r) = try_find_res(&mut sets, &id_) {
         r.off_status(StatusFlags::TRACK);
     } else {
-        return Err(FavCoreError::IdNotUsable(id));
+        return Err(FavCoreError::IdNotUsable {
+            id,
+            msg: "ID not found".to_string(),
+        });
     }
     sets.write()
 }
@@ -131,7 +140,10 @@ pub(super) async fn pull(id: String) -> FavCoreResult<()> {
             bili.pull_res(r).await?;
         }
     } else {
-        return Err(FavCoreError::IdNotUsable(id));
+        return Err(FavCoreError::IdNotUsable {
+            id,
+            msg: "ID not found".to_string(),
+        });
     }
     sets.write()
 }
