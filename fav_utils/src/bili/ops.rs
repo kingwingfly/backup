@@ -124,7 +124,6 @@ impl ResOps for Bili {
                 Err(e) => return Err(e),
             };
         self.download(resource, vec![audio, video]).await?; // Ctrl-C will be caught in `download`
-        resource.on_status(StatusFlags::SAVED);
         Ok(())
     }
 }

@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+## [0.2.15] - 2024-05-04
+
+- utils: remove duplicated status change.
+
 ## [0.2.14] - 2024-04-25
 
 - core: FavCoreError will show a message.
