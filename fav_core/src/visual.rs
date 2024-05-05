@@ -47,13 +47,14 @@ where
     T::Res: Attr + Status,
 {
     fn table(&self) {
-        let header = vec!["ID", "Title", "Track", "Saved"];
+        let header = vec!["ID", "Title", "Track", "Saved", "Expired"];
         let rows = self.iter().map(|res| {
             let id = String::from(res.id());
             let title = res.title().to_string().chars().take(15).collect();
             let track = res.check_status(StatusFlags::TRACK).to_string();
             let saved = res.check_status(StatusFlags::SAVED).to_string();
-            vec![id, title, track, saved]
+            let expired = res.check_status(StatusFlags::EXPIRED).to_string();
+            vec![id, title, track, saved, expired]
         });
         show_table(header, rows);
     }
@@ -64,17 +65,29 @@ where
     T: Res,
 {
     fn table(&self) {
-        let header = vec!["ID", "Title", "Track", "Saved"];
+        let header = vec!["ID", "Title", "Track", "Saved", "Expired"];
         let id = String::from(self.id());
         let title = self.title().to_string().chars().take(15).collect();
         let track = self.check_status(StatusFlags::TRACK).to_string();
         let saved = self.check_status(StatusFlags::SAVED).to_string();
-        let rows = vec![vec![id, title, track, saved]];
+        let expired = self.check_status(StatusFlags::EXPIRED).to_string();
+        let rows = vec![vec![id, title, track, saved, expired]];
         show_table(header, rows);
     }
 }
 
-pub(crate) fn show_table<H, R>(header: H, rows: R)
+/// Show table helper function
+/// # Example
+/// ```
+/// # #[cfg(feature = "visual")]
+/// # {
+/// use fav_core::visual::show_table;
+/// let header = vec!["ID", "Title", "Track", "Saved"];
+/// let rows = vec![vec!["1", "Title", "true", "false"], vec!["2", "Title", "false", "true"]];
+/// show_table(header, rows);
+/// # }
+/// ```
+pub fn show_table<H, R>(header: H, rows: R)
 where
     H: IntoIterator,
     H::Item: Into<String>,

@@ -1,6 +1,6 @@
 [package]
 name = "fav_core"
-version = "0.0.5"
+version = "0.0.6"
 authors.workspace = true
 description = "Fav's core crate; A collection of traits."
 license.workspace = true
@@ -37,7 +37,6 @@ bitflags = "2.5"
 fav_derive = { workspace = true, optional = true }
 # tracing
 tracing = { version = "0.1" }
-
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }
