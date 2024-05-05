@@ -88,7 +88,8 @@ impl ResOps for Bili {
             res = self.request_proto::<BiliRes>(ApiKind::FetchRes, params, "/data") => {
                     match res {
                         Ok(res) => *resource |= res,
-                        Err(_) => resource.on_status(StatusFlags::EXPIRED),
+                        Err(e) if matches!(e, FavCoreError::NetworkError(_)) => Err(e)?,
+                        _ => resource.on_status(StatusFlags::EXPIRED),
                     }
                     resource.on_status(StatusFlags::FETCHED);
                 },

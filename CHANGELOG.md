@@ -10,9 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
-## [0.2.15] - 2024-05-04
+## [0.2.15] - 2024-05-06
 
 - utils: remove duplicated status change.
+- fix: `fav fetch` will mark all resources as `expired` if no network. This command fetches sets before resources, so the bug only happens when network disconnected after fetching sets successfully, it's rare.
 
 ## [0.2.14] - 2024-04-25
 
