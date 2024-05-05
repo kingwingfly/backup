@@ -47,14 +47,13 @@ where
     T::Res: Attr + Status,
 {
     fn table(&self) {
-        let header = vec!["ID", "Title", "Track", "Saved", "Expired"];
+        let header = vec!["ID", "Title", "Track", "Saved"];
         let rows = self.iter().map(|res| {
             let id = String::from(res.id());
             let title = res.title().to_string().chars().take(15).collect();
             let track = res.check_status(StatusFlags::TRACK).to_string();
             let saved = res.check_status(StatusFlags::SAVED).to_string();
-            let expired = res.check_status(StatusFlags::EXPIRED).to_string();
-            vec![id, title, track, saved, expired]
+            vec![id, title, track, saved]
         });
         show_table(header, rows);
     }
