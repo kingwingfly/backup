@@ -33,11 +33,12 @@ struct MyCustomizeCallback;
 impl CustomizeCallback for MyCustomizeCallback {
     fn message(&self, message: &MessageDescriptor) -> Customize {
         let name = message.name();
+        let c = Customize::default();
         match name {
-            "Upper" => Customize::default().before(DERIVE_UPPER),
-            "BiliRes" => Customize::default().before(DERIVE_BILIRES),
-            "BiliSet" => Customize::default().before(DERIVE_BILISET),
-            _ => Customize::default(),
+            "Upper" => c.before(DERIVE_UPPER),
+            "BiliRes" => c.before(DERIVE_BILIRES),
+            "BiliSet" => c.before(DERIVE_BILISET),
+            _ => c,
         }
     }
 }
