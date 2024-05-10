@@ -27,17 +27,17 @@ jobs:
     needs: create-release
     strategy:
       matrix:
-        os:
-          - platform: "macos-latest" # for Arm based macs (M1 and above).
-            args: "--target aarch64-apple-darwin"
-          - platform: "macos-latest" # for Intel based macs.
-            args: "--target x86_64-apple-darwin"
-          - platform: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
-            args: ""
-          - platform: "windows-latest"
-            args: ""
+        include:
+          - os: "macos-latest" # for Arm based macs (M1 and above).
+            target: "aarch64-apple-darwin"
+          - os: "macos-latest" # for Intel based macs.
+            target: "x86_64-apple-darwin"
+          - os: "ubuntu-22.04" # for Tauri v1 you could replace this with ubuntu-20.04.
+            target: x86_64-unknown-linux-gnu
+          - os: "windows-latest"
+            target: x86_64-pc-windows-msvc
 
-    runs-on: ${{ matrix.os.platform }}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/upload-rust-binary-action@v1
@@ -45,6 +45,12 @@ jobs:
           # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
           # Note that glob pattern is not supported yet.
           bin: fav
+          # (optional) Target triple, default is host triple.
+          # This is optional but it is recommended that this always be set to
+          # clarify which target you are building for if macOS is included in
+          # the matrix because GitHub Actions changed the default architecture
+          # of macos-latest since macos-14.
+          target: ${{ matrix.target }}
           # (optional) Archive name (non-extension portion of filename) to be uploaded.
           # [default value: $bin-$target]
           # [possible values: the following variables and any string]
