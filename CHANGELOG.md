@@ -10,7 +10,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
-## [0.2.16]
+## [0.2.16] - 2024-05-10
 
 - improve: show expired status in `fav status bvid`.
 - improve: show more infos(git commit hash and rustc info) in `fav -V`.
