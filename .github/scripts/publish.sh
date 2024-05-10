@@ -5,7 +5,7 @@ export TERM=xterm-256color
 
 # Statements waiting to be executed
 statements=(
-    "cargo publish -p $1"
+    "PROJECT_VERSION=$(git describe) cargo publish -p $1"
 )
 
 # loop echo and executing statements

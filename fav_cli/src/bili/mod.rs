@@ -8,7 +8,7 @@ use fav_core::FavCoreResult;
 
 /// The main CLI entry point.
 #[derive(Parser)]
-#[command(author, version, about)]
+#[command(author, version = option_env!("PROJECT_VERSION").unwrap_or(env!("CARGO_PKG_VERSION")), about)]
 pub struct Cli {
     #[clap(subcommand)]
     subcmd: Commands,
