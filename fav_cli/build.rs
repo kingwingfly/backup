@@ -1,4 +1,5 @@
 use rustc_version::{version_meta, Channel};
+use vergen::EmitBuilder;
 
 fn main() {
     // Set cfg flags depending on release channel
@@ -9,4 +10,12 @@ fn main() {
         Channel::Dev => "CHANNEL_DEV",
     };
     println!("cargo:rustc-cfg={}", channel);
+
+    EmitBuilder::builder()
+        .git_describe(false, true, None)
+        .rustc_host_triple()
+        .rustc_channel()
+        .rustc_semver()
+        .emit()
+        .unwrap();
 }
