@@ -37,7 +37,7 @@ jobs:
           - platform: "windows-latest"
             args: ""
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os.platform }}
     steps:
       - uses: actions/checkout@v4
       - uses: taiki-e/upload-rust-binary-action@v1
