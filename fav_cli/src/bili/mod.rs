@@ -9,7 +9,9 @@ use fav_core::FavCoreResult;
 /// The main CLI entry point.
 #[derive(Parser)]
 #[command(author, version = concat!(
-    env!("VERGEN_GIT_DESCRIBE"),"\nRUSTC: ",
+    env!("VERGEN_GIT_DESCRIBE"), " ",
+    env!("VERGEN_GIT_COMMIT_TIMESTAMP"),
+    "\nRUSTC: ",
     env!("VERGEN_RUSTC_HOST_TRIPLE"), " ",
     env!("VERGEN_RUSTC_CHANNEL"), " ",
     env!("VERGEN_RUSTC_SEMVER")

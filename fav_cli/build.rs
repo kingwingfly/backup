@@ -13,6 +13,7 @@ fn main() {
 
     EmitBuilder::builder()
         .git_describe(false, true, None)
+        .git_commit_timestamp()
         .rustc_host_triple()
         .rustc_channel()
         .rustc_semver()
