@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+### [0.2.17] - 2024-05-10
+
+- improve: show more infos(timestamp) in `fav -V`.
+
 ## [0.2.16] - 2024-05-10
 
 - improve: show expired status in `fav status bvid`.
