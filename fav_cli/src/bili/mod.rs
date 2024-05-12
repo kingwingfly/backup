@@ -6,16 +6,24 @@ use action::*;
 use clap::{error::ErrorKind, CommandFactory as _, Parser, Subcommand, ValueHint};
 use fav_core::FavCoreResult;
 
+const VERSION: &str = const_format::formatcp!(
+    "{} {}\nRUSCT {} {} {}",
+    match option_env!("VERGEN_GIT_DESCRIBE") {
+        Some(var) => var,
+        _ => concat!(env!("CARGO_PKG_VERSION"), "+"),
+    },
+    match option_env!("VERGEN_GIT_COMMIT_TIMESTAMP") {
+        Some(var) => var,
+        _ => "unknown-timestamp",
+    },
+    env!("VERGEN_RUSTC_HOST_TRIPLE"),
+    env!("VERGEN_RUSTC_CHANNEL"),
+    env!("VERGEN_RUSTC_SEMVER")
+);
+
 /// The main CLI entry point.
 #[derive(Parser)]
-#[command(author, version = concat!(
-    env!("VERGEN_GIT_DESCRIBE"), " ",
-    env!("VERGEN_GIT_COMMIT_TIMESTAMP"),
-    "\nRUSTC: ",
-    env!("VERGEN_RUSTC_HOST_TRIPLE"), " ",
-    env!("VERGEN_RUSTC_CHANNEL"), " ",
-    env!("VERGEN_RUSTC_SEMVER")
-), about)]
+#[command(author, version = VERSION, about)]
 pub struct Cli {
     #[clap(subcommand)]
     subcmd: Commands,

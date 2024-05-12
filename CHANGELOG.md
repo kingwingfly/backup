@@ -10,9 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
-### [0.2.17] - 2024-05-10
+### [0.2.17] - 2024-05-12
 
 - improve: show more infos(timestamp) in `fav -V`.
+- fix: meaningless version message when building without a git tree.
 
 ## [0.2.16] - 2024-05-10
 
