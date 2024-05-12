@@ -7,7 +7,7 @@ use clap::{error::ErrorKind, CommandFactory as _, Parser, Subcommand, ValueHint}
 use fav_core::FavCoreResult;
 
 const VERSION: &str = const_format::formatcp!(
-    "{} {}\nRUSCT {} {} {}",
+    "{} {}\nRUSC: {} {} {}",
     match option_env!("VERGEN_GIT_DESCRIBE") {
         Some(var) => var,
         _ => concat!(env!("CARGO_PKG_VERSION"), "+"),
