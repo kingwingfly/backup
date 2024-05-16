@@ -2,6 +2,7 @@ use super::api::ApiKind;
 use super::{Bili, BiliRes, BiliSet, BiliSets};
 use crate::{utils::qr::show_qr_code, FavUtilsError, FavUtilsResult};
 use fav_core::{prelude::*, status::SetStatusExt as _};
+use futures::StreamExt;
 use reqwest::Response;
 use std::collections::HashMap;
 use tokio::time::{sleep, Duration};
@@ -66,13 +67,16 @@ impl SetOps for Bili {
     async fn fetch_set(&self, set: &mut BiliSet) -> FavCoreResult<()> {
         let id = set.id.to_string();
         info!("Fetching set<{}>", id);
-        for pn in 1..=set.media_count.saturating_sub(1) / 20 + 1 {
-            let pn = pn.to_string();
-            let params = vec![id.clone(), pn, "20".to_string()];
-            *set |= self
-                .request_proto::<BiliSet>(ApiKind::FetchSet, params, "/data")
-                .await?
-                .with_res_status_on(StatusFlags::FAV);
+        let page_count = set.media_count.saturating_sub(1) / 20 + 1;
+        let mut stream = tokio_stream::iter(1..=page_count)
+            .map(|pn| {
+                let pn = pn.to_string();
+                let params = vec![id.clone(), pn, "20".to_string()];
+                self.request_proto::<BiliSet>(ApiKind::FetchSet, params, "/data")
+            })
+            .buffer_unordered(10);
+        while let Some(res) = stream.next().await {
+            *set |= res?.with_res_status_on(StatusFlags::FAV);
         }
         info!("Fetch set<{}> successfully.", id);
         Ok(())

@@ -1,6 +1,6 @@
 [package]
 name = "fav_utils"
-version = "0.0.3"
+version = "0.0.4"
 authors.workspace = true
 description = "Fav's utils crate; A collection of utilities and data structures for the fav project"
 license.workspace = true
@@ -11,29 +11,31 @@ documentation = "https://docs.rs/fav_utils"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# Core
+# core
 fav_core.workspace = true
 # CLI
 indicatif = { version = "0.17", features = ["tokio"] }
-# Serde
+# serde
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1" }
-# ProtoBuf
+# protoBuf
 protobuf = { version = "3", features = ["with-bytes"] }
 protobuf-json-mapping = { version = "3" }
-# Net
+# net
 reqwest = { version = "0.12", features = ["json", "cookies"] }
 url = "2.5"
-# Runtime
+# async
 tokio = { version = "1", features = [
     "macros",
     "rt-multi-thread",
     "signal",
     "process",
 ] }
+tokio-stream = { version = "0.1" }
+futures = "0.3"
 # tracing
 tracing = { version = "0.1" }
-# Tools
+# tools
 qrcode = { version = "0.14", default-features = false }
 tempfile = "3.10.1"
 sanitize-filename = "0.5.0"

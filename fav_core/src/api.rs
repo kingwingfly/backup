@@ -108,6 +108,7 @@ mod tests {
         }
     }
 
+    #[allow(dead_code)]
     struct LoginApi;
 
     impl Api for LoginApi {

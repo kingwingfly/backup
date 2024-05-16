@@ -393,7 +393,7 @@ dependencies = [
 
 [[package]]
 name = "fav_core"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "bitflags 2.5.0",
  "fav_derive",
@@ -427,9 +427,10 @@ dependencies = [
 
 [[package]]
 name = "fav_utils"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "fav_core",
+ "futures",
  "indicatif",
  "md5",
  "protobuf",
@@ -443,6 +444,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "tokio",
+ "tokio-stream",
  "tracing",
  "url",
 ]
