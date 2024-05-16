@@ -21,7 +21,7 @@ fav_cli = { path = "fav_cli" }
 fav_utils_old = { path = "fav_utils_old" }
 
 [profile.release]
-lto = true
+lto = "fat"
 opt-level = 3
 codegen-units = 1
 strip = "debuginfo"

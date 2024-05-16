@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+### [0.2.18] - 2024-05-17
+
+- optimize: lto set to `fat` to reduce binary size.
+
 ## [0.2.17] - 2024-05-17
 
 - improve: show more infos(timestamp) in `fav -V`.
