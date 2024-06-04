@@ -90,9 +90,7 @@ impl SaveLocal for Bili {
 
 async fn merge(title: &str, id: &str, path_v: &str, path_a: &str) -> FavCoreResult<()> {
     let mut title = sanitize_filename::sanitize(title);
-    if std::path::Path::new(&title).exists() {
-        title.push_str(id);
-    }
+    title.push_str(id);
     let status = tokio::process::Command::new("ffmpeg")
         .args([
             "-y",
