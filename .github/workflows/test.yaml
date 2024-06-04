@@ -14,9 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: install cargo components
-        run: rustup component add clippy
-
       - name: Extract version
         id: extract-version
         run: echo "VERSION=$(grep -oP '^version = "\K[^"]+' Cargo.toml | awk '{$1=$1;print}')" >> $GITHUB_OUTPUT
@@ -32,6 +29,10 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ steps.extract-version.outputs.VERSION }}
+
+      - name: install cargo components
+        if: steps.cache-cargo-restore.outputs.cache-hit != 'true'
+        run: rustup component add clippy
 
       - name: Run build
         if: steps.cache-cargo-restore.outputs.cache-hit != 'true'
