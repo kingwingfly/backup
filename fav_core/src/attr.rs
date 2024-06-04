@@ -1,6 +1,8 @@
 //! Attribute,
 //! managing the resources' attributes
 
+use std::fmt::Display;
+
 #[cfg(feature = "derive")]
 pub use fav_derive::Attr;
 
@@ -151,6 +153,16 @@ impl From<Id<'_>> for String {
             Id::String(id) => id.to_owned(),
             Id::I64(id) => id.to_string(),
             Id::I32(id) => id.to_string(),
+        }
+    }
+}
+
+impl Display for Id<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Id::I64(id) => write!(f, "{}", id),
+            Id::I32(id) => write!(f, "{}", id),
+            Id::String(id) => write!(f, "{}", id),
         }
     }
 }

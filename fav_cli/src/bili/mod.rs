@@ -6,7 +6,7 @@ use action::*;
 use clap::{error::ErrorKind, CommandFactory as _, Parser, Subcommand, ValueHint};
 use fav_core::{local::ProtoLocal as _, FavCoreResult};
 use fav_utils::bili::BiliSets;
-use tracing::{error, info};
+use tracing::info;
 
 const VERSION: &str = const_format::formatcp!(
     "{}\nRUSTC: {} {} {}",
@@ -150,31 +150,10 @@ impl Cli {
                         },
                     },
                     Commands::Fetch => fetch(&mut sets).await,
-                    Commands::Track { id } => {
-                        for id in id {
-                            if let Err(e) = track(&mut sets, id) {
-                                error!("{e}");
-                            }
-                        }
-                        Ok(())
-                    }
-                    Commands::Untrack { id } => {
-                        for id in id {
-                            if let Err(e) = untrack(&mut sets, id) {
-                                error!("{e}");
-                            }
-                        }
-                        Ok(())
-                    }
+                    Commands::Track { id: ids } => track(&mut sets, ids),
+                    Commands::Untrack { id: ids } => untrack(&mut sets, ids),
                     Commands::Pull { id } => match id {
-                        Some(id) => {
-                            for id in id {
-                                if let Err(e) = pull(&mut sets, id).await {
-                                    error!("{e}");
-                                }
-                            }
-                            Ok(())
-                        }
+                        Some(ids) => pull(&mut sets, ids).await,
                         None => pull_all(&mut sets).await,
                     },
                     Commands::Daemon { interval } => daemon(&mut sets, interval).await,

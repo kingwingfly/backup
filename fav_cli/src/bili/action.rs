@@ -2,9 +2,9 @@ use fav_core::ops::{ResOpsExt as _, SetOpsExt as _};
 use fav_core::prelude::*;
 use fav_core::status::SetStatusExt as _;
 use fav_core::visual::{TableRes as _, TableSet as _, TableSets as _};
-use fav_utils::bili::{Bili, BiliRes, BiliSet, BiliSets};
+use fav_utils::bili::{Bili, BiliSets};
 use std::io::Write as _;
-use tracing::{info, warn};
+use tracing::{error, info, warn};
 
 pub(super) fn init() -> FavCoreResult<()> {
     let path = std::path::PathBuf::from(BiliSets::PATH);
@@ -37,17 +37,23 @@ pub(super) async fn logout() -> FavCoreResult<()> {
 }
 
 pub(super) fn status(sets: &mut BiliSets, id: String) -> FavCoreResult<()> {
-    let id_ = Id::from(&id);
-    if let Some(s) = find_set(sets, &id_) {
-        s.table();
-    } else if let Some(r) = find_res(sets, &id_) {
-        r.table();
-    } else {
-        return Err(FavCoreError::IdNotUsable {
-            id,
-            msg: "ID not found".to_string(),
-        });
+    let id = Id::from(&id);
+    for set in sets.iter_mut() {
+        if set.id() == id {
+            set.table();
+        } else if let Some(res) = set.iter().find(|r| r.id() == id) {
+            res.table();
+        } else {
+            error!(
+                "{}",
+                FavCoreError::IdNotUsable {
+                    id: id.to_string(),
+                    msg: "ID not found".to_string(),
+                }
+            );
+        }
     }
+
     Ok(())
 }
 
@@ -86,37 +92,53 @@ pub(super) async fn fetch(sets: &mut BiliSets) -> FavCoreResult<()> {
     Ok(())
 }
 
-pub(super) fn track(sets: &mut BiliSets, id: String) -> FavCoreResult<()> {
-    let id_ = Id::from(&id);
-    if let Some(s) = find_set(sets, &id_) {
-        s.on_status(StatusFlags::TRACK);
-        s.on_res_status(StatusFlags::TRACK);
-    } else if let Some(r) = find_res(sets, &id_) {
-        r.on_status(StatusFlags::TRACK);
-    } else {
-        return Err(FavCoreError::IdNotUsable {
-            id,
-            msg: "ID not found".to_string(),
-        });
+pub(super) fn track(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult<()> {
+    for id in ids.iter().map(Id::from) {
+        for set in sets.iter_mut() {
+            if set.id() == id {
+                set.on_status(StatusFlags::TRACK);
+                set.on_res_status(StatusFlags::TRACK);
+                info!("Tracked set ID: {id}");
+            } else if let Some(res) = set.iter_mut().find(|r| r.id() == id) {
+                res.on_status(StatusFlags::TRACK);
+                info!("Tracked resource ID: {id}");
+            } else {
+                error!(
+                    "{}",
+                    FavCoreError::IdNotUsable {
+                        id: id.to_string(),
+                        msg: "ID not found".to_string(),
+                    }
+                );
+            }
+        }
     }
-    info!("Tracked ID: {id}");
+
     Ok(())
 }
 
-pub(super) fn untrack(sets: &mut BiliSets, id: String) -> FavCoreResult<()> {
-    let id_ = Id::from(&id);
-    if let Some(s) = find_set(sets, &id_) {
-        s.off_status(StatusFlags::TRACK);
-        s.medias.clear();
-    } else if let Some(r) = find_res(sets, &id_) {
-        r.off_status(StatusFlags::TRACK);
-    } else {
-        return Err(FavCoreError::IdNotUsable {
-            id,
-            msg: "ID not found".to_string(),
-        });
+pub(super) fn untrack(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult<()> {
+    for id in ids.iter().map(Id::from) {
+        for set in sets.iter_mut() {
+            if set.id() == id {
+                set.off_status(StatusFlags::TRACK);
+                set.off_res_status(StatusFlags::TRACK);
+                info!("Untracked set ID: {id}");
+            } else if let Some(res) = set.iter_mut().find(|r| r.id() == id) {
+                res.off_status(StatusFlags::TRACK);
+                info!("Untracked resource ID: {id}");
+            } else {
+                error!(
+                    "{}",
+                    FavCoreError::IdNotUsable {
+                        id: id.to_string(),
+                        msg: "ID not found".to_string(),
+                    }
+                );
+            }
+        }
     }
-    info!("Untracked ID: {id}");
+
     Ok(())
 }
 
@@ -135,34 +157,31 @@ pub(super) async fn pull_all(sets: &mut BiliSets) -> FavCoreResult<()> {
     Ok(())
 }
 
-pub(super) async fn pull(sets: &mut BiliSets, id: String) -> FavCoreResult<()> {
+pub(super) async fn pull(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult<()> {
     fetch(sets).await?;
+    let ids: Vec<_> = ids.iter().map(Id::from).collect();
     let bili = Bili::read()?;
-    let id_ = Id::from(&id);
-    if let Some(s) = find_set(sets, &id_) {
-        let mut sub = s.subset(|r| {
+    for id in ids.iter() {
+        if let Some(s) = sets.iter_mut().find(|s| s.id() == *id) {
+            let mut sub = s.subset(|r| {
+                !r.check_status(StatusFlags::SAVED)
+                    & !r.check_status(StatusFlags::EXPIRED)
+                    & r.check_status(StatusFlags::TRACK | StatusFlags::FETCHED)
+            });
+            bili.batch_pull_res(&mut sub).await?;
+        }
+    }
+    let mut sub = sets.subset(|s| s.check_status(StatusFlags::TRACK));
+    for set in sub.iter_mut() {
+        let mut sub = set.subset(|r| {
             !r.check_status(StatusFlags::SAVED)
                 & !r.check_status(StatusFlags::EXPIRED)
                 & r.check_status(StatusFlags::TRACK | StatusFlags::FETCHED)
+                & ids.contains(&r.id())
         });
         bili.batch_pull_res(&mut sub).await?;
-    } else if let Some(r) = find_res(sets, &id_) {
-        if !r.check_status(StatusFlags::EXPIRED)
-            & r.check_status(StatusFlags::TRACK | StatusFlags::FETCHED)
-        {
-            bili.pull_res(r).await?;
-        } else {
-            return Err(FavCoreError::IdNotUsable {
-                id,
-                msg: "EXPIRED or UNTRACK, unable to fetch".to_string(),
-            });
-        }
-    } else {
-        return Err(FavCoreError::IdNotUsable {
-            id,
-            msg: "Not Found".to_string(),
-        });
     }
+
     Ok(())
 }
 
@@ -196,17 +215,4 @@ pub(super) async fn daemon(sets: &mut BiliSets, interval: u64) -> FavCoreResult<
         }
     }
     Ok(())
-}
-
-fn find_set<'a>(sets: &'a mut BiliSets, id: &Id) -> Option<&'a mut BiliSet> {
-    sets.iter_mut().find(|s| s.id() == *id)
-}
-
-fn find_res<'a>(sets: &'a mut BiliSets, id: &Id) -> Option<&'a mut BiliRes> {
-    for set in sets.iter_mut() {
-        if let Some(r) = set.iter_mut().find(|r| r.id() == *id) {
-            return Some(r);
-        }
-    }
-    None
 }

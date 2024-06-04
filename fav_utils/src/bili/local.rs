@@ -62,11 +62,6 @@ impl SaveLocal for Bili {
                         None => finish_a = true,
                     }
                 },
-                _ = tokio::signal::ctrl_c() => {
-                    file_v.into_inner().unwrap().close()?;
-                    file_a.into_inner().unwrap().close()?;
-                    return Err(FavCoreError::Cancel)
-                }
             }
             if finish_v && finish_a {
                 break;
