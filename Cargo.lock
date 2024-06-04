@@ -385,7 +385,6 @@ dependencies = [
  "const_format",
  "fav_core",
  "fav_utils",
- "rustc_version",
  "tokio",
  "tracing",
  "vergen",
@@ -421,7 +420,6 @@ dependencies = [
  "fav_core",
  "quote",
  "reqwest",
- "rustc_version",
  "syn 2.0.66",
 ]
 
@@ -438,7 +436,6 @@ dependencies = [
  "protobuf-json-mapping",
  "qrcode",
  "reqwest",
- "rustc_version",
  "sanitize-filename",
  "serde",
  "serde_json",

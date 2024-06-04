@@ -6,8 +6,16 @@ use fav_utils::bili::{Bili, BiliRes, BiliSet, BiliSets};
 use tracing::{info, warn};
 
 pub(super) fn init() -> FavCoreResult<()> {
-    #[cfg(not(test))]
-    std::fs::create_dir_all(".fav")?;
+    let path = std::path::PathBuf::from(BiliSets::PATH);
+    if path.parent().unwrap().exists() {
+        warn!("The .fav folder already exists, do you want to overwrite it? (y/n)");
+        let stdin = std::io::stdin();
+        let mut buf = String::new();
+        stdin.read_line(&mut buf)?;
+        if buf.trim() != "y" {
+            return Ok(());
+        }
+    }
     BiliSets::default().write()?;
     Ok(())
 }

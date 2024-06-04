@@ -9,7 +9,7 @@ use url::Url;
 /// Refer to a path on disk;
 /// impl `PathInfo` for `T: MessageFull` will auto implement [`ProtoLocal`].
 pub trait PathInfo {
-    /// The path (it must exists, or it will panic at runtime)
+    /// The path (it will create the parent directory if not exists)
     const PATH: &'static str;
 }
 
@@ -36,6 +36,9 @@ pub trait ProtoLocal: PathInfo + MessageFull {
     /// Write the protobuf to file, which is at `PathInfo::PATH`
     fn write(self) -> FavCoreResult<()> {
         let path = std::path::PathBuf::from(Self::PATH);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
         let mut file = std::fs::File::create(path)?;
         self.write_to_writer(&mut file)?;
         Ok(())

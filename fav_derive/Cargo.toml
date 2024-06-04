@@ -23,6 +23,3 @@ quote = "1.0"
 [dev-dependencies]
 fav_core.workspace = true
 reqwest = { version = "0.12" }
-
-[build-dependencies]
-rustc_version = "0.4.0"

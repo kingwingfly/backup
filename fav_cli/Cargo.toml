@@ -29,7 +29,6 @@ chrono = "0.4"
 const_format = "0.2"
 
 [build-dependencies]
-rustc_version = "0.4.0"
 vergen = { version = "8.3", features = ["git", "rustc", "gitcl"] }
 
 [features]

@@ -6,14 +6,14 @@ use std::io::{BufWriter, Write as _};
 
 impl PathInfo for Bili {
     #[cfg(test)]
-    const PATH: &'static str = "temp/temp.bili";
+    const PATH: &'static str = concat!(env!("OUT_DIR"), "/fav_cache/bili");
     #[cfg(not(test))]
     const PATH: &'static str = ".fav/bili";
 }
 
 impl PathInfo for BiliSets {
     #[cfg(test)]
-    const PATH: &'static str = "temp/temp.sets";
+    const PATH: &'static str = concat!(env!("OUT_DIR"), "/fav_cache/sets");
     #[cfg(not(test))]
     const PATH: &'static str = ".fav/sets";
 }
