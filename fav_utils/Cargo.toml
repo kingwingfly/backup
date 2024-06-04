@@ -16,7 +16,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 # core
-fav_core.workspace = true
+fav_core = { workspace = true, version = "0.0.10" }
 # CLI
 indicatif = { version = "0.17", features = ["tokio"] }
 # serde

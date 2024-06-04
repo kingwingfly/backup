@@ -47,13 +47,10 @@ impl std::fmt::Display for FavCoreError {
             FavCoreError::Json2ProtobufError(source) => format!("ProtobufParseErr: {}", source),
             FavCoreError::ProtobufError(source) => format!("ProtobufError: {}", source),
             FavCoreError::IoError(source) => {
-                format!( "IOErr: {}; Maybe you didn't run `fav init` or have no permission to write .fav", source)
+                format!("IOErr: {}", source)
             }
             FavCoreError::IdNotUsable { id, msg } => {
-                format!(
-                    "Id<{}> not usable; Or maybe the resource is expired or not permitted to get; {}",
-                    id, msg
-                )
+                format!("ID<{}> not usable;  {}", id, msg)
             }
         };
         write!(f, "{}", hint)

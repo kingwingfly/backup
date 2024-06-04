@@ -1,10 +1,12 @@
 //! The CLI for [bilibili](https://www.bilibili.com)
 
 mod action;
-use action::*;
 
+use action::*;
 use clap::{error::ErrorKind, CommandFactory as _, Parser, Subcommand, ValueHint};
-use fav_core::FavCoreResult;
+use fav_core::{local::ProtoLocal as _, FavCoreResult};
+use fav_utils::bili::BiliSets;
+use tracing::{error, info};
 
 const VERSION: &str = const_format::formatcp!(
     "{} {}\nRUSTC: {} {} {}",
@@ -37,7 +39,7 @@ enum Commands {
     Auth {
         /// Login method
         #[clap(subcommand)]
-        subcmd: AuthCommands,
+        subcmd: AuthCommand,
     },
     /// Fetch from remote
     Fetch,
@@ -89,7 +91,7 @@ enum Commands {
 }
 
 #[derive(Subcommand)]
-enum AuthCommands {
+enum AuthCommand {
     /// Login with password
     Login,
     /// Login with QR code
@@ -108,58 +110,82 @@ impl Cli {
         let args = Self::parse();
         match args.subcmd {
             Commands::Init => init()?,
-            Commands::Auth { subcmd } => match subcmd {
-                AuthCommands::Login => login().await?,
-                AuthCommands::Logout => logout().await?,
-                AuthCommands::Reuse { path } => {
-                    std::fs::hard_link(path.join("bili"), ".fav/bili")?;
-                }
-            },
-            Commands::Status {
-                id,
-                sets,
-                res,
-                track,
-            } => match id {
-                Some(id) => {
-                    if sets | res | track {
-                        Cli::command()
-                            .error(
-                                ErrorKind::ArgumentConflict,
-                                "The id to 'fav status' does not take -s, -r, -t, options.",
-                            )
-                            .exit();
-                    }
-                    status(id)?;
-                }
-                None => match (sets, res) {
-                    (false, false) => status_all(sets, true, track)?,
-                    _ => status_all(sets, res, track)?,
-                },
-            },
-            Commands::Fetch => fetch().await?,
-            Commands::Track { id } => {
-                for id in id {
-                    track(id)?;
-                }
-            }
-            Commands::Untrack { id } => {
-                for id in id {
-                    untrack(id)?;
-                }
-            }
-            Commands::Pull { id } => match id {
-                Some(id) => {
-                    for id in id {
-                        pull(id).await?;
-                    }
-                }
-                None => pull_all().await?,
-            },
-            Commands::Daemon { interval } => daemon(interval).await?,
+            Commands::Auth {
+                subcmd: AuthCommand::Logout,
+            } => logout().await?,
             Commands::Completion { shell } => {
                 let mut cmd = Cli::command();
                 clap_complete::generate(shell, &mut cmd, "fav", &mut std::io::stdout());
+            }
+            subcmd => {
+                let mut sets = BiliSets::read()?;
+                let res = match subcmd {
+                    Commands::Auth { subcmd: authcmd } => {
+                        match authcmd {
+                            AuthCommand::Login => login().await?,
+                            AuthCommand::Reuse { path } => {
+                                std::fs::hard_link(path.join("bili"), ".fav/bili")?;
+                                info!("Reuse the login info from {}", path.display());
+                            }
+                            _ => unreachable!(),
+                        }
+                        fetch(&mut sets).await
+                    }
+                    Commands::Status {
+                        id,
+                        sets: show_sets,
+                        res: show_res,
+                        track: only_track,
+                    } => match id {
+                        Some(id) => {
+                            if show_sets | show_res | only_track {
+                                Cli::command()
+                                    .error(
+                                        ErrorKind::ArgumentConflict,
+                                        "The id to 'fav status' does not take -s, -r, -t, options.",
+                                    )
+                                    .exit();
+                            }
+                            status(&mut sets, id)
+                        }
+                        None => match (show_sets, show_res) {
+                            (false, false) => status_all(&mut sets, true, false, only_track),
+                            _ => status_all(&mut sets, show_sets, show_res, only_track),
+                        },
+                    },
+                    Commands::Fetch => fetch(&mut sets).await,
+                    Commands::Track { id } => {
+                        for id in id {
+                            if let Err(e) = track(&mut sets, id) {
+                                error!("{e}");
+                            }
+                        }
+                        Ok(())
+                    }
+                    Commands::Untrack { id } => {
+                        for id in id {
+                            if let Err(e) = untrack(&mut sets, id) {
+                                error!("{e}");
+                            }
+                        }
+                        Ok(())
+                    }
+                    Commands::Pull { id } => match id {
+                        Some(id) => {
+                            for id in id {
+                                if let Err(e) = pull(&mut sets, id).await {
+                                    error!("{e}");
+                                }
+                            }
+                            Ok(())
+                        }
+                        None => pull_all(&mut sets).await,
+                    },
+                    Commands::Daemon { interval } => daemon(&mut sets, interval).await,
+                    _ => unreachable!(),
+                };
+                sets.write()?;
+                res?;
             }
         }
         Ok(())

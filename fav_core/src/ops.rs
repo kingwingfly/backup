@@ -15,7 +15,7 @@ use protobuf_json_mapping::{parse_from_str_with_options, ParseOptions};
 use reqwest::{header, Client, Response};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-use tracing::{error, warn};
+use tracing::error;
 
 const PARSE_OPTIONS: ParseOptions = ParseOptions {
     ignore_unknown_fields: true,
@@ -94,14 +94,8 @@ pub trait LocalResOps: Net + HttpConfig {
     /// The resource type the operations on
     type Res: Res;
     /// Fetch one resource
-    /// # Caution
-    /// One could handle Ctrl-C with `tokio::signal::ctrl_c` and `tokio::select!`,
-    /// and return [`FavCoreError::Cancel`]. This error will be handled by [`ResOpsExt::batch_fetch_res`].
     async fn fetch_res(&self, resource: &mut Self::Res) -> FavCoreResult<()>;
     /// Pull one resource.
-    /// # Caution
-    /// One needs to handle Ctrl-C with `tokio::signal::ctrl_c` and `tokio::select!`,
-    /// and return [`FavCoreError::Cancel`]. This error will be handled by [`ResOpsExt::batch_pull_res`].
     async fn pull_res(&self, resource: &mut Self::Res) -> FavCoreResult<()>;
 }
 
@@ -224,14 +218,17 @@ where
     let mut stream = tokio_stream::iter(set.iter_mut())
         .map(f)
         .buffer_unordered(10);
-    while let Some(r) = stream.next().await {
-        if let Err(e) = r {
-            match e {
-                FavCoreError::Cancel => {
-                    warn!("{e}");
-                    break;
+    loop {
+        tokio::select! {
+            res = stream.next() => {
+                match res {
+                    None => break,
+                    Some(Err(e)) => error!("{}", e),
+                    _ => {}
                 }
-                _ => error!("{e}"),
+            }
+            _ = tokio::signal::ctrl_c() => {
+                return Err(FavCoreError::Cancel);
             }
         }
     }
@@ -315,14 +312,17 @@ where
     let mut stream = tokio_stream::iter(set.iter_mut())
         .map(f)
         .buffer_unordered(10);
-    while let Some(r) = stream.next().await {
-        if let Err(e) = r {
-            match e {
-                FavCoreError::Cancel => {
-                    warn!("{e}");
-                    break;
+    loop {
+        tokio::select! {
+            res = stream.next() => {
+                match res {
+                    None => break,
+                    Some(Err(e)) => error!("{}", e),
+                    _ => {}
                 }
-                _ => error!("{e}"),
+            }
+            _ = tokio::signal::ctrl_c() => {
+                return Err(FavCoreError::Cancel);
             }
         }
     }

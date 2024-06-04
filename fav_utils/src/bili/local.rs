@@ -67,7 +67,6 @@ impl SaveLocal for Bili {
                     file_a.into_inner().unwrap().close()?;
                     return Err(FavCoreError::Cancel)
                 }
-
             }
             if finish_v && finish_a {
                 break;
