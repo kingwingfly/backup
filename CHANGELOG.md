@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+### [0.2.19] - 2024-06-04
+
+- better documente for `fav_core`
+
 ## [0.2.18] - 2024-06-04
 
 - optimize: lto set to `fat` to reduce binary size.
