@@ -9,14 +9,10 @@ use fav_utils::bili::BiliSets;
 use tracing::{error, info};
 
 const VERSION: &str = const_format::formatcp!(
-    "{} {}\nRUSTC: {} {} {}",
+    "{}\nRUSTC: {} {} {}",
     match option_env!("VERGEN_GIT_DESCRIBE") {
         Some(var) => var,
         _ => concat!(env!("CARGO_PKG_VERSION"), "(CARGO_PKG_VERSION)"),
-    },
-    match option_env!("VERGEN_GIT_COMMIT_TIMESTAMP") {
-        Some(var) => var,
-        _ => "unknown-timestamp",
     },
     env!("VERGEN_RUSTC_HOST_TRIPLE"),
     env!("VERGEN_RUSTC_CHANNEL"),

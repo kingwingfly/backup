@@ -18,6 +18,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 - auth: auto fetch after login
 - (un)track: show hint after (un)track 
 - pull: id not found hint improve
+- cli version: remove git timestamp
 
 ## [0.2.18] - 2024-06-04
 
