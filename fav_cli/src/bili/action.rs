@@ -1,3 +1,5 @@
+use std::io::Write;
+
 use fav_core::ops::{ResOpsExt, SetOpsExt};
 use fav_core::prelude::*;
 use fav_core::status::SetStatusExt;
@@ -7,8 +9,10 @@ use tracing::{info, warn};
 
 pub(super) fn init() -> FavCoreResult<()> {
     let path = std::path::PathBuf::from(BiliSets::PATH);
-    if path.parent().unwrap().exists() {
-        warn!("The .fav folder already exists, do you want to overwrite it? (y/n)");
+    if path.exists() {
+        let mut stdout = std::io::stdout();
+        stdout.write(b"The .fav folder already exists, do you want to overwrite it? (y/n): ")?;
+        stdout.flush()?;
         let stdin = std::io::stdin();
         let mut buf = String::new();
         stdin.read_line(&mut buf)?;
