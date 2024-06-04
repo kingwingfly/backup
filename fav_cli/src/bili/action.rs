@@ -11,7 +11,8 @@ pub(super) fn init() -> FavCoreResult<()> {
     let path = std::path::PathBuf::from(BiliSets::PATH);
     if path.exists() {
         let mut stdout = std::io::stdout();
-        stdout.write(b"The .fav folder already exists, do you want to overwrite it? (y/n): ")?;
+        stdout
+            .write_all(b"The .fav folder already exists, do you want to overwrite it? (y/n): ")?;
         stdout.flush()?;
         let stdin = std::io::stdin();
         let mut buf = String::new();
