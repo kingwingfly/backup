@@ -10,10 +10,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
-### [0.2.20] - 2024-06-05
-
-
-## [0.2.19] - 2024-06-05
+## [0.2.20] - 2024-06-05
 
 - better documente for `fav_core`
 - fix bugs in batch ops
@@ -25,6 +22,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 - fix: `batch_pull` and `pull` handle SIGINT together, leading multi info log.
 - refactor all commands
 - fix: cache not clear if failed or cancelled
+
+## [0.2.19] - 2024-06-05
+
+- yanked
 
 ## [0.2.18] - 2024-06-04
 
