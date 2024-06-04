@@ -20,22 +20,22 @@ To implement this workflow and maintain a local state, `fav_core` has many usefu
 
 2. Config
 
-- `Config: HttpConfig + ProtoLocal`: mark the app able to be config and persisted
+- `Config: HttpConfig + ProtoLocal` mark the app able to be config and persisted
 
 - `HttpConfig`: define the default headers, cookies
 
 3. Status and attributes
 
-- `Sets`: iterate and get subset of sets
-- `Set`:  iterate and get subset of resources
-- `Res`: `Res: Meta`
+- `Sets`: iterate over and get subset of sets
+- `Set`:  iterate over and get subset of resources
+- `Res: Meta`
 - `Meta`: the metadata of resource, `Meta: Attr + Status`
 - `Attr`: provide resource's id and title
 - `Status`: the status of resource, like saved, fetched, tracked and expired
 
 4. Operations
 
-- `Ops`: `Ops: AuthOps + SetsOps + SetOps + ResOps`, means the **app** can perform all needing operations
+- `Ops`: `Ops: AuthOps + SetsOps + SetOps + ResOps`, means the **app** can perform all needed operations
 - `AuthOps`: used to login and logout
 - `SetsOps`: used to `fetch_sets` info, for example, add `English` `Chinese` `Japanese` as new movie collections to `Sets` defined in protobuf.
 - `SetOps`: used to `fetch_set` info, for example, add 《Oliver Twist》《Roman Holiday》《Twelve Angry Men》to `English` collection. 
@@ -50,10 +50,10 @@ To implement this workflow and maintain a local state, `fav_core` has many usefu
 6. visualize (optional): show status as table
 7. Ext methods:
 
-- `SetOpsExt: SetOps`: batch fetch set in sets
-- `ResOpsExt: ResOps`: batch fetch resources in set
+- `SetOpsExt: SetOps` batch fetch set in sets
+- `ResOpsExt: ResOps` batch fetch resources in set
 - `XXStatusExt`: batch modify children's StatusFlags
 
-To draw a conclusion, this crate contains all traits you need to build a stateful crawler. You can define data structures with `protobuf` for fast read and write. Make them stateful, configurable, and able to be persisted. Many network helper is provided, you can `request_json` and `resquest_protobuf` directly. And `Ext` traits provided so that you can batch fetch and pull data or modify the resources' StatusFlags. 
+To draw a conclusion, this crate contains all traits you need to build a stateful crawler. You can define data structures with `protobuf` for fast read and write. Make them stateful, configurable, and able to be persisted. Many network helper is provided, you can `request_json` and `resquest_protobuf` directly. And `Ext` traits are provided so that you can batch fetch and pull data or modify the resources' StatusFlags. 
 
 An example can be found in [fav](https://github.com/kingwingfly/fav) repo. 
