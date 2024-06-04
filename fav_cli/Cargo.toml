@@ -15,8 +15,8 @@ rustdoc-args = ["--cfg", "docsrs"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-fav_core = { path = "../fav_core", version = "0.0.11" }
-fav_utils = { path = "../fav_utils", version = "0.0.6" }
+fav_core = { workspace = true }
+fav_utils = { workspace = true }
 # CLI
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = { version = "4" }
