@@ -34,6 +34,7 @@ pub trait PathInfo {
 /// ```
 pub trait ProtoLocal: PathInfo + MessageFull {
     /// Write the protobuf to file, which is at `PathInfo::PATH`
+    /// Create the parent directory if not exists
     fn write(self) -> FavCoreResult<()> {
         let path = std::path::PathBuf::from(Self::PATH);
         if let Some(parent) = path.parent() {
