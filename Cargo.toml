@@ -13,12 +13,6 @@ edition = "2021"
 repository = "https://github.com/kingwingfly/fav"
 documentation = ""
 
-[workspace.dependencies]
-fav_core = { path = "fav_core" }
-fav_derive = { path = "fav_derive" }
-fav_utils = { path = "fav_utils" }
-fav_cli = { path = "fav_cli" }
-
 [profile.release]
 lto = "fat"
 opt-level = 3
