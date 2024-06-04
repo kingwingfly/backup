@@ -367,7 +367,7 @@ checksum = "25cbce373ec4653f1a01a31e8a5e5ec0c622dc27ff9c4e6606eefef5cbbed4a5"
 
 [[package]]
 name = "fav"
-version = "0.2.20"
+version = "0.2.19"
 dependencies = [
  "fav_cli",
  "tokio",
@@ -377,7 +377,7 @@ dependencies = [
 
 [[package]]
 name = "fav_cli"
-version = "0.2.20"
+version = "0.2.19"
 dependencies = [
  "chrono",
  "clap",
@@ -392,7 +392,7 @@ dependencies = [
 
 [[package]]
 name = "fav_core"
-version = "0.0.12"
+version = "0.0.13"
 dependencies = [
  "bitflags 2.5.0",
  "fav_derive",
@@ -424,7 +424,7 @@ dependencies = [
 
 [[package]]
 name = "fav_utils"
-version = "0.0.7"
+version = "0.0.8"
 dependencies = [
  "fav_core",
  "futures",

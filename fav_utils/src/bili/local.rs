@@ -62,23 +62,27 @@ impl SaveLocal for Bili {
                         None => finish_a = true,
                     }
                 },
-            }
-            if finish_v && finish_a {
-                break;
+                _ = async {}, if finish_v && finish_a => {
+                    file_v.flush().unwrap();
+                    file_a.flush().unwrap();
+                    pb.finish();
+                    merge(
+                        title,
+                        &id,
+                        file_v.into_inner().unwrap().path().to_str().unwrap(),
+                        file_a.into_inner().unwrap().path().to_str().unwrap(),
+                    )
+                    .await?;
+                    res.on_status(StatusFlags::SAVED);
+                    return Ok(())
+                },
+                _ = tokio::signal::ctrl_c() => {
+                    file_v.into_inner().unwrap().close()?;
+                    file_a.into_inner().unwrap().close()?;
+                    return Err(FavCoreError::Cancel)
+                }
             }
         }
-        file_v.flush().unwrap();
-        file_a.flush().unwrap();
-        pb.finish();
-        merge(
-            title,
-            &id,
-            file_v.into_inner().unwrap().path().to_str().unwrap(),
-            file_a.into_inner().unwrap().path().to_str().unwrap(),
-        )
-        .await?;
-        res.on_status(StatusFlags::SAVED);
-        Ok(())
     }
 }
 

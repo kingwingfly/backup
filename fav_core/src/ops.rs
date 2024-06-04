@@ -217,13 +217,14 @@ where
 {
     let mut stream = tokio_stream::iter(set.iter_mut())
         .map(f)
-        .buffer_unordered(10);
+        .buffer_unordered(8);
     loop {
         tokio::select! {
             res = stream.next() => {
                 match res {
                     None => break,
-                    Some(Err(e)) => error!("{}", e),
+                    Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
+                    Some(Err(e))  => error!("{}", e),
                     _ => {}
                 }
             }
@@ -311,12 +312,13 @@ where
 {
     let mut stream = tokio_stream::iter(set.iter_mut())
         .map(f)
-        .buffer_unordered(10);
+        .buffer_unordered(8);
     loop {
         tokio::select! {
             res = stream.next() => {
                 match res {
                     None => break,
+                    Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
                     Some(Err(e)) => error!("{}", e),
                     _ => {}
                 }
