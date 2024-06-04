@@ -10,9 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
-### [0.2.18] - 2024-05-17
+## [0.2.18] - 2024-06-04
 
 - optimize: lto set to `fat` to reduce binary size.
+- init: add confirming if '.fav' already exists.
 
 ## [0.2.17] - 2024-05-17
 
