@@ -123,7 +123,10 @@ impl ResOps for Bili {
                 Err(FavCoreError::SerdePointerNotFound) => {
                     return Err(FavCoreError::IdNotUsable {
                         id: resource.bvid.clone(),
-                        msg: format!("You may run `fav untrack {}` to fix it", resource.bvid),
+                        msg: format!(
+                            "Resource inaccessible. You may run `fav untrack {}` to fix it",
+                            resource.bvid
+                        ),
                     })
                 }
                 Err(e) => return Err(e),

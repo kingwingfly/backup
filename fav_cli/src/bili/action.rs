@@ -197,7 +197,10 @@ pub(super) async fn daemon(sets: &mut BiliSets, interval: u64) -> FavCoreResult<
     let mut fire: bool = true;
     loop {
         tokio::select! {
-            _ = pull_all(sets), if fire => {
+            res = pull_all(sets), if fire => {
+                if let Err(e) = res {
+                    error!("{}", e);
+                }
                 let next_ts_local = (chrono::Utc::now() + interval)
                     .with_timezone(&chrono::Local)
                     .format("%Y-%m-%d %H:%M:%S")
