@@ -10,13 +10,17 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+## [0.2.21] - 2024-06-05
+
+- improve progress bar
+
 ## [0.2.20] - 2024-06-05
 
 - better documente for `fav_core`
 - fix bugs in batch ops
 - fix ctrl-c not handled: handle `SIGINT` in `fav_core`'s Ext methods
 - auth: auto fetch after login
-- (un)track: show hint after (un)track 
+- (un)track: show hint after (un)track
 - pull: id not found hint improve
 - cli version: remove git timestamp
 - fix: `batch_pull` and `pull` handle SIGINT together, leading multi info log.

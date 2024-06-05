@@ -44,6 +44,7 @@ qrcode = { version = "0.14", default-features = false }
 tempfile = "3.10.1"
 sanitize-filename = "0.5.0"
 md5 = "0.7.0"
+unicode-width = "0.1.13"
 
 [build-dependencies]
 protobuf = { version = "3", features = ["with-bytes"] }

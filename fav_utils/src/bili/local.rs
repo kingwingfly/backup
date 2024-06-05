@@ -35,8 +35,7 @@ impl SaveLocal for Bili {
                 .unwrap()
                 .parse::<usize>()
                 .unwrap();
-        let pb = download_bar(size);
-        pb.set_message(title.chars().take(10).collect::<String>());
+        let pb = download_bar(size, title);
 
         let mut file_v = BufWriter::new(tempfile::NamedTempFile::new()?);
         let mut file_a = BufWriter::new(tempfile::NamedTempFile::new()?);
