@@ -1,4 +1,5 @@
 use fav_cli::bili::Cli;
+use std::io;
 use tracing::{error, Level};
 use tracing_subscriber::{filter, prelude::*};
 
@@ -12,6 +13,7 @@ async fn main() {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::fmt::layer()
+                .with_writer(io::stdout)
                 .without_time()
                 .with_target(false),
         )
