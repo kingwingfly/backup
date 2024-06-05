@@ -143,6 +143,8 @@ Options:
 ```sh
 # auto complete is supported; i.e. fish
 $ fav completion fish > ~/.config/fish/completions/fav.fish
+# For windows user
+$ echo "fav completion powershell | Out-String | Invoke-Expression" >> $PROFILE
 # init for bilibili
 $ fav init
 # scan code to login
