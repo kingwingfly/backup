@@ -9,7 +9,7 @@ use url::Url;
 /// Refer to a path on disk;
 /// impl `PathInfo` for `T: MessageFull` will auto implement [`ProtoLocal`].
 pub trait PathInfo {
-    /// The path (it will create the parent directory if not exists)
+    /// The path (the Parent directory will be created if not exists)
     const PATH: &'static str;
 }
 
@@ -23,11 +23,11 @@ pub trait PathInfo {
 ///
 /// // Require `Msg` to implemente `protobuf::MessageFull`
 /// impl PathInfo for Msg {
-///     const PATH: &'static str = "temp/msg";
+///     const PATH: &'static str = concat!(env!("OUT_DIR"), "/fav_cache/msg");
 /// }
 /// // trait `ProtoLocal` will be auto implemented for `T: PathInfo + MessageFull`
 /// let msg = Msg::default();
-/// msg.clone().write();   // The Msg will be write to `.fav/msg`
+/// msg.clone().write();   // The Msg will be write to `fav_cache/msg`
 /// let msg_read: Msg = Msg::read().unwrap();
 /// assert_eq!(msg, msg_read);
 /// Msg::remove();

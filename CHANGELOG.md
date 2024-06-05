@@ -17,6 +17,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 - terminate if network disconnected
 - improve error message if resource inaccessible
 - improve error message during daemon
+- core: fix a doc test which will create temp dir
 
 ## [0.2.20] - 2024-06-05
 
