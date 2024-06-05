@@ -159,7 +159,7 @@ $ fav track <list_id>
 $ fav pull
 # untrack list or video
 $ fav untrack <list_id/bvid>
-# daemon
+# daemon, run `fav pull` every 30 minutes
 $ fav daemon 30
 ```
 
