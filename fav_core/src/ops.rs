@@ -94,8 +94,14 @@ pub trait LocalResOps: Net + HttpConfig {
     /// The resource type the operations on
     type Res: Res;
     /// Fetch one resource
+    /// # Caution
+    /// One could handle Ctrl-C with `tokio::signal::ctrl_c` and `tokio::select!`,
+    /// and return [`FavCoreError::Cancel`]. This error will be handled by [`ResOpsExt::batch_fetch_res`].
     async fn fetch_res(&self, resource: &mut Self::Res) -> FavCoreResult<()>;
     /// Pull one resource.
+    /// # Caution
+    /// One needs to handle Ctrl-C with `tokio::signal::ctrl_c` and `tokio::select!`,
+    /// and return [`FavCoreError::Cancel`]. This error will be handled by [`ResOpsExt::batch_pull_res`].
     async fn pull_res(&self, resource: &mut Self::Res) -> FavCoreResult<()>;
 }
 
@@ -319,6 +325,7 @@ where
                 match res {
                     None => break,
                     Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
+                    Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => return Err(FavCoreError::NetworkError(e)),
                     Some(Err(e)) => error!("{}", e),
                     _ => {}
                 }

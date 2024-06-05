@@ -3,6 +3,7 @@ use crate::{utils::bar::download_bar, FavUtilsError};
 use fav_core::prelude::*;
 use reqwest::header::CONTENT_LENGTH;
 use std::io::{BufWriter, Write as _};
+use tracing::error;
 
 impl PathInfo for Bili {
     #[cfg(test)]
@@ -41,24 +42,33 @@ impl SaveLocal for Bili {
         let mut file_a = BufWriter::new(tempfile::NamedTempFile::new()?);
         let mut finish_v = false;
         let mut finish_a = false;
+        let mut failed_reason = None;
         loop {
             tokio::select! {
                 chunk = resp_v.chunk(), if !finish_v => {
-                    match chunk? {
-                        Some(chunk) => {
+                    match chunk {
+                        Ok(Some(chunk)) => {
                             pb.inc(chunk.len() as u64);
                             file_v.write_all(&chunk).unwrap();
                         }
-                        None => finish_v = true,
+                        Ok(None) => finish_v = true,
+                        Err(e) => {
+                            error!("Failed to download video: {}", res.id());
+                            failed_reason = Some(e);
+                        }
                     }
                 },
                 chunk = resp_a.chunk(), if !finish_a => {
-                    match chunk? {
-                        Some(chunk) => {
+                    match chunk {
+                        Ok(Some(chunk)) => {
                             pb.inc(chunk.len() as u64);
                             file_a.write_all(&chunk).unwrap();
                         }
-                        None => finish_a = true,
+                        Ok(None) => finish_a = true,
+                        Err(e) => {
+                            error!("Failed to download video: {}", res.id());
+                            failed_reason = Some(e);
+                        }
                     }
                 },
                 _ = async {}, if finish_v && finish_a => {
@@ -74,6 +84,11 @@ impl SaveLocal for Bili {
                     .await?;
                     res.on_status(StatusFlags::SAVED);
                     return Ok(())
+                },
+                _ = async {}, if failed_reason.is_some() => {
+                    file_v.into_inner().unwrap().close()?;
+                    file_a.into_inner().unwrap().close()?;
+                    return Err(failed_reason.unwrap().into());
                 },
                 _ = tokio::signal::ctrl_c() => {
                     file_v.into_inner().unwrap().close()?;

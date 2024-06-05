@@ -13,6 +13,7 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 ## [0.2.21] - 2024-06-05
 
 - improve progress bar
+- continue if network error happens
 
 ## [0.2.20] - 2024-06-05
 
