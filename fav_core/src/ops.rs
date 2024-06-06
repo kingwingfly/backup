@@ -15,6 +15,7 @@ use protobuf_json_mapping::{parse_from_str_with_options, ParseOptions};
 use reqwest::{header, Client, Response};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
+use tokio_util::sync::{CancellationToken, WaitForCancellationFutureOwned};
 use tracing::error;
 
 const PARSE_OPTIONS: ParseOptions = ParseOptions {
@@ -81,8 +82,14 @@ pub trait LocalSetsOps: Net + HttpConfig {
 pub trait LocalSetOps: Net + HttpConfig {
     /// The set type the operations on
     type Set: Set;
-    /// Fetch one resource set
-    async fn fetch_set(&self, set: &mut Self::Set) -> FavCoreResult<()>;
+    /// Fetch one resource set,
+    /// `F: Fn() -> Future<...>`, if Future is ready, one can cleanup and
+    /// shutdown gracefully, then return `FavCoreError::Cancel`.
+    async fn fetch_set<F, Fut, Any>(&self, set: &mut Self::Set, f: F) -> FavCoreResult<()>
+    where
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send;
 }
 
 /// Making a client able to operate on resource
@@ -93,17 +100,215 @@ pub trait LocalSetOps: Net + HttpConfig {
 pub trait LocalResOps: Net + HttpConfig {
     /// The resource type the operations on
     type Res: Res;
-    /// Fetch one resource
-    /// # Caution
-    /// One could handle Ctrl-C with `tokio::signal::ctrl_c` and `tokio::select!`,
-    /// and return [`FavCoreError::Cancel`]. This error will be handled by [`ResOpsExt::batch_fetch_res`].
-    async fn fetch_res(&self, resource: &mut Self::Res) -> FavCoreResult<()>;
-    /// Pull one resource.
-    /// # Caution
-    /// One needs to handle Ctrl-C with `tokio::signal::ctrl_c` and `tokio::select!`,
-    /// and return [`FavCoreError::Cancel`]. This error will be handled by [`ResOpsExt::batch_pull_res`].
-    async fn pull_res(&self, resource: &mut Self::Res) -> FavCoreResult<()>;
+    /// Fetch one resource,
+    /// `F: Fn() -> Future<...>`, if Future is ready, one can cleanup and
+    /// shutdown gracefully, then return `FavCoreError::Cancel`.
+    fn fetch_res<F, Fut, Any>(
+        &self,
+        resource: &mut Self::Res,
+        f: F,
+    ) -> impl Future<Output = FavCoreResult<()>>
+    where
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send;
+    /// Pull one resource,
+    /// `F: Fn() -> Future<...>`, if Future is ready, one can cleanup and
+    /// shutdown gracefully, then return `FavCoreError::Cancel`.
+    async fn pull_res<F, Fut, Any>(&self, resource: &mut Self::Res, f: F) -> FavCoreResult<()>
+    where
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send;
 }
+
+/// `SetsOpsExt`, including methods to batch fetch set in sets.
+/// # Example
+/// ```no_run
+/// # #[path = "test_utils/mod.rs"]
+/// # mod test_utils;
+/// # use test_utils::data::{App, TestSets};
+/// # use fav_core::{status::{Status, StatusFlags}, res::Sets, ops::SetOpsExt};
+/// # async {
+/// let app = App::default();
+/// let mut sets = TestSets::default();
+/// let mut sub = sets.subset(|r| r.check_status(StatusFlags::TRACK));
+/// app.batch_fetch_set(&mut sub);
+/// # };
+/// ```
+pub trait SetOpsExt: SetOps {
+    /// **Asynchronously** fetch sets in sets using [`SetOps::fetch_set`].
+    fn batch_fetch_set<'a, SS>(&self, sets: &'a mut SS) -> impl Future<Output = FavCoreResult<()>>
+    where
+        SS: Sets<Set = Self::Set>,
+    {
+        batch_op_set(sets, |r, f| self.fetch_set(r, f))
+    }
+}
+
+/// A helper function to batch do operation on sets.
+/// You can use it like [`batch_op_set`]
+/// However, it's better to use [`Sets::subset`] and [`SetOpsExt`] instead.
+/// See [`SetOpsExt`] for more information.
+pub async fn batch_op_set<'a, SS, F, T>(sets: &'a mut SS, mut f: F) -> FavCoreResult<()>
+where
+    SS: Sets + 'a,
+    F: FnMut(&'a mut SS::Set, Box<dyn Fn() -> WaitForCancellationFutureOwned + Send>) -> T,
+    T: Future<Output = FavCoreResult<()>>,
+{
+    let token = CancellationToken::new();
+    let mut stream = tokio_stream::iter(sets.iter_mut())
+        .map(|s| {
+            let token1 = token.clone();
+            let shutdown = Box::new(move || token1.clone().cancelled_owned());
+            let fut = f(s, shutdown);
+            let token = token.clone();
+            async move {
+                if token.is_cancelled() {
+                    Err(FavCoreError::Cancel)
+                } else {
+                    fut.await
+                }
+            }
+        })
+        .buffer_unordered(8);
+    loop {
+        tokio::select! {
+            res = stream.next() => {
+                match res {
+                    None => break,
+                    Some(Err(FavCoreError::Cancel)) => {}
+                    Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
+                        token.cancel();  // if already cancelled, it's handled by token itself
+                        error!("{}", FavCoreError::NetworkError(e));
+                    }
+                    Some(Err(e)) => error!("{}", e),
+                    _ => {}
+                }
+            }
+            _ = tokio::signal::ctrl_c() => {
+                token.cancel();
+                error!("{}", FavCoreError::Cancel);
+            }
+        }
+    }
+    Ok(())
+}
+
+impl<T> SetOpsExt for T where T: SetOps {}
+
+/// `SetOpsExt`, including methods to batch fetch and pull resources in set.
+/// # Example
+/// ```no_run
+/// # #[path = "test_utils/mod.rs"]
+/// # mod test_utils;
+/// # use test_utils::data::{App, TestSet};
+/// # use fav_core::{status::{Status, StatusFlags}, res::Set, ops::ResOpsExt};
+/// # async {
+/// let app = App::default();
+/// let mut set = TestSet::default();
+/// let mut sub = set.subset(|r| r.check_status(StatusFlags::TRACK));
+/// app.batch_fetch_res(&mut sub);
+/// # };
+/// ```
+pub trait ResOpsExt: ResOps {
+    /// **Asynchronously** fetch resourses in set using [`ResOps::fetch_res`].
+    fn batch_fetch_res<'a, S>(&self, set: &'a mut S) -> impl Future<Output = FavCoreResult<()>>
+    where
+        S: Set<Res = Self::Res>,
+    {
+        batch_op_res(set, |r, f| self.fetch_res(r, f))
+    }
+
+    /// **Asynchronously** pull resourses in set using [`ResOps::pull_res`].
+    fn batch_pull_res<'a, S>(&self, set: &'a mut S) -> impl Future<Output = FavCoreResult<()>>
+    where
+        S: Set<Res = Self::Res>,
+    {
+        batch_op_res(set, |r, f| self.pull_res(r, f))
+    }
+}
+
+/// A helper function to batch do operation on resources.
+///
+/// # Example
+/// ```no_run
+/// # #[path = "test_utils/mod.rs"]
+/// # mod test_utils;
+/// # use test_utils::data::{App, TestSet, TestRes};
+/// # use fav_core::{status::{Status, StatusFlags}, res::{Set, Res}, ops::{batch_op_res, ResOps}};
+/// struct Sub<'a, F: Fn(&dyn Res) -> bool> {
+///     set: &'a mut TestSet,
+///     f: F,
+/// }
+/// impl<F: Fn(&dyn Res) -> bool> Set for Sub<'_, F> {
+///     type Res = TestRes;
+///     fn iter(&self) -> impl Iterator<Item = &Self::Res> {
+///         self.set.iter().filter(|r| (self.f)(*r))
+///     }
+///
+///     fn iter_mut(&mut self) -> impl Iterator<Item = &mut Self::Res> {
+///         self.set.iter_mut().filter(|r| (self.f)(*r))
+///     }
+/// }
+/// # async {
+/// let app = App::default();
+/// let mut set = TestSet::default();
+/// let mut sub = Sub {
+///     set: &mut set,
+///     f: |r| r.check_status(StatusFlags::TRACK)
+/// };
+/// batch_op_res(&mut sub, |r, fut| app.fetch_res(r, fut)).await.unwrap();
+/// # };
+/// ```
+/// However, it's better to use [`Set::subset`] and [`ResOpsExt`] instead.
+/// See [`ResOpsExt`] for more information.
+pub async fn batch_op_res<'a, S, F, T>(set: &'a mut S, mut f: F) -> FavCoreResult<()>
+where
+    S: Set + 'a,
+    F: FnMut(&'a mut S::Res, Box<dyn Fn() -> WaitForCancellationFutureOwned + Send>) -> T,
+    T: Future<Output = FavCoreResult<()>>,
+{
+    let token = CancellationToken::new();
+    let mut stream = tokio_stream::iter(set.iter_mut())
+        .map(|s| {
+            let token1 = token.clone();
+            let shutdown = Box::new(move || token1.clone().cancelled_owned());
+            let fut = f(s, shutdown);
+            let token = token.clone();
+            async move {
+                if token.is_cancelled() {
+                    Err(FavCoreError::Cancel)
+                } else {
+                    fut.await
+                }
+            }
+        })
+        .buffer_unordered(8);
+    loop {
+        tokio::select! {
+            res = stream.next() => {
+                match res {
+                    None => break,
+                    Some(Err(FavCoreError::Cancel)) => {}
+                    Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
+                        token.cancel();
+                        error!("{}", FavCoreError::NetworkError(e));
+                    }
+                    Some(Err(e)) => error!("{}", e),
+                    _ => {}
+                }
+            }
+            _ = tokio::signal::ctrl_c() => {
+                token.cancel();
+                error!("{}", FavCoreError::Cancel);
+            }
+        }
+    }
+    Ok(())
+}
+
+impl<T> ResOpsExt for T where T: ResOps {}
 
 /// Making it able to perform network operations.
 pub trait Net: HttpConfig + ApiProvider {
@@ -186,150 +391,6 @@ pub trait Net: HttpConfig + ApiProvider {
 }
 
 impl<T> Net for T where T: HttpConfig + ApiProvider {}
-
-/// `SetsOpsExt`, including methods to batch fetch set in sets.
-/// # Example
-/// ```no_run
-/// # #[path = "test_utils/mod.rs"]
-/// # mod test_utils;
-/// # use test_utils::data::{App, TestSets};
-/// # use fav_core::{status::{Status, StatusFlags}, res::Sets, ops::SetOpsExt};
-/// # async {
-/// let app = App::default();
-/// let mut sets = TestSets::default();
-/// let mut sub = sets.subset(|r| r.check_status(StatusFlags::TRACK));
-/// app.batch_fetch_set(&mut sub);
-/// # };
-/// ```
-pub trait SetOpsExt: SetOps {
-    /// **Asynchronously** fetch sets in sets using [`SetOps::fetch_set`].
-    fn batch_fetch_set<'a, SS>(&self, sets: &'a mut SS) -> impl Future<Output = FavCoreResult<()>>
-    where
-        SS: Sets<Set = Self::Set>,
-    {
-        batch_op_set(sets, |r| self.fetch_set(r))
-    }
-}
-
-/// A helper function to batch do operation on sets.
-/// You can use it like [`batch_op_set`]
-/// However, it's better to use [`Sets::subset`] and [`SetOpsExt`] instead.
-/// See [`SetOpsExt`] for more information.
-pub async fn batch_op_set<'a, SS, F, T>(set: &'a mut SS, f: F) -> FavCoreResult<()>
-where
-    SS: Sets + 'a,
-    F: FnMut(&'a mut SS::Set) -> T,
-    T: Future<Output = FavCoreResult<()>>,
-{
-    let mut stream = tokio_stream::iter(set.iter_mut())
-        .map(f)
-        .buffer_unordered(8);
-    loop {
-        match stream.next().await {
-            None => break,
-            Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
-            Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
-                return Err(FavCoreError::NetworkError(e))
-            }
-            Some(Err(e)) => error!("{}", e),
-            _ => {}
-        }
-    }
-    Ok(())
-}
-
-impl<T> SetOpsExt for T where T: SetOps {}
-
-/// `SetOpsExt`, including methods to batch fetch and pull resources in set.
-/// # Example
-/// ```no_run
-/// # #[path = "test_utils/mod.rs"]
-/// # mod test_utils;
-/// # use test_utils::data::{App, TestSet};
-/// # use fav_core::{status::{Status, StatusFlags}, res::Set, ops::ResOpsExt};
-/// # async {
-/// let app = App::default();
-/// let mut set = TestSet::default();
-/// let mut sub = set.subset(|r| r.check_status(StatusFlags::TRACK));
-/// app.batch_fetch_res(&mut sub);
-/// # };
-/// ```
-pub trait ResOpsExt: ResOps {
-    /// **Asynchronously** fetch resourses in set using [`ResOps::fetch_res`].
-    fn batch_fetch_res<'a, S>(&self, set: &'a mut S) -> impl Future<Output = FavCoreResult<()>>
-    where
-        S: Set<Res = Self::Res>,
-    {
-        batch_op_res(set, |r| self.fetch_res(r))
-    }
-
-    /// **Asynchronously** pull resourses in set using [`ResOps::pull_res`].
-    fn batch_pull_res<'a, S>(&self, set: &'a mut S) -> impl Future<Output = FavCoreResult<()>>
-    where
-        S: Set<Res = Self::Res>,
-    {
-        batch_op_res(set, |r| self.pull_res(r))
-    }
-}
-
-/// A helper function to batch do operation on resources.
-///
-/// # Example
-/// ```no_run
-/// # #[path = "test_utils/mod.rs"]
-/// # mod test_utils;
-/// # use test_utils::data::{App, TestSet, TestRes};
-/// # use fav_core::{status::{Status, StatusFlags}, res::{Set, Res}, ops::{batch_op_res, ResOps}};
-/// struct Sub<'a, F: Fn(&dyn Res) -> bool> {
-///     set: &'a mut TestSet,
-///     f: F,
-/// }
-/// impl<F: Fn(&dyn Res) -> bool> Set for Sub<'_, F> {
-///     type Res = TestRes;
-///     fn iter(&self) -> impl Iterator<Item = &Self::Res> {
-///         self.set.iter().filter(|r| (self.f)(*r))
-///     }
-///
-///     fn iter_mut(&mut self) -> impl Iterator<Item = &mut Self::Res> {
-///         self.set.iter_mut().filter(|r| (self.f)(*r))
-///     }
-/// }
-/// # async {
-/// let app = App::default();
-/// let mut set = TestSet::default();
-/// let mut sub = Sub {
-///     set: &mut set,
-///     f: |r| r.check_status(StatusFlags::TRACK)
-/// };
-/// batch_op_res(&mut sub, |r| app.fetch_res(r)).await.unwrap();
-/// # };
-/// ```
-/// However, it's better to use [`Set::subset`] and [`ResOpsExt`] instead.
-/// See [`ResOpsExt`] for more information.
-pub async fn batch_op_res<'a, S, F, T>(set: &'a mut S, f: F) -> FavCoreResult<()>
-where
-    S: Set + 'a,
-    F: FnMut(&'a mut S::Res) -> T,
-    T: Future<Output = FavCoreResult<()>>,
-{
-    let mut stream = tokio_stream::iter(set.iter_mut())
-        .map(f)
-        .buffer_unordered(8);
-    loop {
-        match stream.next().await {
-            None => break,
-            Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
-            Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
-                return Err(FavCoreError::NetworkError(e))
-            }
-            Some(Err(e)) => error!("{}", e),
-            _ => {}
-        }
-    }
-    Ok(())
-}
-
-impl<T> ResOpsExt for T where T: ResOps {}
 
 /// Serde `Response` to json.
 pub async fn resp2json<T>(resp: Response, pointer: &str) -> FavCoreResult<T>

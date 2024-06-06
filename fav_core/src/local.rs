@@ -63,10 +63,18 @@ impl<T> ProtoLocal for T where T: PathInfo + MessageFull {}
 
 /// Make it able to save the resource to local
 pub trait SaveLocal: Net {
-    /// Save the resource to local
-    fn download<R: Res>(
+    /// Save the resource to local.
+    /// `F: Fn() -> Future<...>`, if Future is ready, one can cleanup and
+    /// shutdown gracefully, then return `FavCoreError::Cancel`.
+    fn download<R, F, Fut, Any>(
         &self,
         res: &mut R,
         urls: Vec<Url>,
-    ) -> impl Future<Output = FavCoreResult<()>>;
+        f: F,
+    ) -> impl Future<Output = FavCoreResult<()>>
+    where
+        R: Res,
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send;
 }

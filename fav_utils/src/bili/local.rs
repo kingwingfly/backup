@@ -1,5 +1,6 @@
 use super::{Bili, BiliSets};
 use crate::{utils::bar::download_bar, FavUtilsError};
+use core::future::Future;
 use fav_core::prelude::*;
 use reqwest::header::CONTENT_LENGTH;
 use std::io::{BufWriter, Write as _};
@@ -20,7 +21,18 @@ impl PathInfo for BiliSets {
 }
 
 impl SaveLocal for Bili {
-    async fn download<R: Res>(&self, res: &mut R, urls: Vec<reqwest::Url>) -> FavCoreResult<()> {
+    async fn download<R, F, Fut, Any>(
+        &self,
+        res: &mut R,
+        urls: Vec<reqwest::Url>,
+        f: F,
+    ) -> FavCoreResult<()>
+    where
+        R: Res,
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send,
+    {
         let title = res.title();
         let id = String::from(res.id());
         let mut urls = urls;
@@ -90,7 +102,7 @@ impl SaveLocal for Bili {
                     file_a.into_inner().unwrap().close()?;
                     return Err(failed_reason.unwrap().into());
                 },
-                _ = tokio::signal::ctrl_c() => {
+                _ = f() => {
                     file_v.into_inner().unwrap().close()?;
                     file_a.into_inner().unwrap().close()?;
                     return Err(FavCoreError::Cancel)

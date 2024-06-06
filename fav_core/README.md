@@ -1,4 +1,6 @@
-[fav_core](https://crates.io/crates/fav_core) is the core library of [fav_cli](https://github.com/kingwingfly/fav) (A cli tool to download remote resources and keep a local state in protobuf). In simple words, `fav_core` is a helper to build a stateful crawler. 
+[fav_core](https://crates.io/crates/fav_core) is the core library of [fav_cli](https://github.com/kingwingfly/fav) (A cli tool to download remote resources and keep a local state in protobuf). In simple words, `fav_core` is a helper to build a stateful crawler.
+
+# Usage
 
 [fav_utils](https://crates.io/crates/fav_utils) provides the utils for [fav_cli](https://crates.io/crates/fav_cli), which now only support [BiliBili](https://www.bilibili.com)(Like Chinese YouTube). You can see it as an example for using this crate.
 
@@ -38,14 +40,14 @@ To implement this workflow and maintain a local state, `fav_core` has many usefu
 - `Ops`: `Ops: AuthOps + SetsOps + SetOps + ResOps`, means the **app** can perform all needed operations
 - `AuthOps`: used to login and logout
 - `SetsOps`: used to `fetch_sets` info, for example, add `English` `Chinese` `Japanese` as new movie collections to `Sets` defined in protobuf.
-- `SetOps`: used to `fetch_set` info, for example, add 《Oliver Twist》《Roman Holiday》《Twelve Angry Men》to `English` collection. 
-- `ResOps`: used to `fetch` and `pull` ,  for example,  `fetch`  id of 《Oliver Twist》 in target website, `pull` the resources to local disk based on the fetched id. 
+- `SetOps`: used to `fetch_set` info, for example, add 《Oliver Twist》《Roman Holiday》《Twelve Angry Men》to `English` collection.
+- `ResOps`: used to `fetch` and `pull` ,  for example,  `fetch`  id of 《Oliver Twist》 in target website, `pull` the resources to local disk based on the fetched id.
 
-5. Persistence 
+5. Persistence
 
 - `PathInfo`: defined where to store status and config
 - `ProtoLocal`: `ProtoLocal: PathInfo + MessageFull` used to read and write status and config
-- `SaveLocal`: make app able to download `Res`, and modify local status. 
+- `SaveLocal`: make app able to download `Res`, and modify local status.
 
 6. visualize (optional): show status as table
 7. Ext methods:
@@ -54,6 +56,10 @@ To implement this workflow and maintain a local state, `fav_core` has many usefu
 - `ResOpsExt: ResOps` batch fetch resources in set
 - `XXStatusExt`: batch modify children's StatusFlags
 
-To draw a conclusion, this crate contains all traits you need to build a stateful crawler. You can define data structures with `protobuf` for fast read and write. Make them stateful, configurable, and able to be persisted. Many network helper is provided, you can `request_json` and `resquest_protobuf` directly. And `Ext` traits are provided so that you can batch fetch and pull data or modify the resources' StatusFlags. 
+To draw a conclusion, this crate contains all traits you need to build a stateful crawler. You can define data structures with `protobuf` for fast read and write. Make them stateful, configurable, and able to be persisted. Many network helper is provided, you can `request_json` and `resquest_protobuf` directly. And `Ext` traits are provided so that you can batch fetch and pull data or modify the resources' StatusFlags.
 
-An example can be found in [fav](https://github.com/kingwingfly/fav) repo. 
+An example can be found in [fav](https://github.com/kingwingfly/fav) repo.
+
+# CHANGELOG
+
+- 0.0.X -> 0.1.X: `Ops` related traits' methods need `F: Fn() -> Future<...>`, if Future is ready, one can cleanup, shutdown gracefully and return `FavCoreError::Cancel`. And `OpsExt` methods handle SIGINT based on this, keeps things reliable.

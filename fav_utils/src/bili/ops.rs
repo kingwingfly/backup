@@ -1,12 +1,13 @@
 use super::api::ApiKind;
 use super::{Bili, BiliRes, BiliSet, BiliSets};
 use crate::{utils::qr::show_qr_code, FavUtilsError, FavUtilsResult};
+use core::future::Future;
 use fav_core::{prelude::*, status::SetStatusExt as _};
 use futures::StreamExt;
 use reqwest::Response;
 use std::collections::HashMap;
 use tokio::time::{sleep, Duration};
-use tracing::info;
+use tracing::{error, info};
 use url::Url;
 
 const POLL_INTERVAL: u64 = 3;
@@ -50,7 +51,7 @@ impl AuthOps for Bili {
 impl SetsOps for Bili {
     type Sets = BiliSets;
 
-    async fn fetch_sets(&self, sets: &mut BiliSets) -> FavCoreResult<()> {
+    async fn fetch_sets(&self, sets: &mut Self::Sets) -> FavCoreResult<()> {
         info!("Fetching sets...");
         let params = vec![self.cookies().get("DedeUserID").expect(HINT).to_owned()];
         *sets |= self
@@ -64,7 +65,12 @@ impl SetsOps for Bili {
 impl SetOps for Bili {
     type Set = BiliSet;
 
-    async fn fetch_set(&self, set: &mut BiliSet) -> FavCoreResult<()> {
+    async fn fetch_set<F, Fut, Any>(&self, set: &mut Self::Set, f: F) -> FavCoreResult<()>
+    where
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send,
+    {
         let id = set.id.to_string();
         info!("Fetching set<{}>", id);
         let page_count = set.media_count.saturating_sub(1) / 20 + 1;
@@ -75,8 +81,17 @@ impl SetOps for Bili {
                 self.request_proto::<BiliSet>(ApiKind::FetchSet, params, "/data")
             })
             .buffer_unordered(10);
-        while let Some(res) = stream.next().await {
-            *set |= res?.with_res_status_on(StatusFlags::FAV);
+        loop {
+            tokio::select! {
+                res = stream.next() => {
+                    match res {
+                         Some(Ok(res)) => *set |= res.with_res_status_on(StatusFlags::FAV),
+                         Some(Err(e)) => error!("{}", e),
+                         None => break
+                    }
+                }
+                _ = f() => return Err(FavCoreError::Cancel)
+            }
         }
         info!("Fetch set<{}> successfully.", id);
         Ok(())
@@ -86,7 +101,12 @@ impl SetOps for Bili {
 impl ResOps for Bili {
     type Res = BiliRes;
 
-    async fn fetch_res(&self, resource: &mut BiliRes) -> FavCoreResult<()> {
+    async fn fetch_res<F, Fut, Any>(&self, resource: &mut Self::Res, f: F) -> FavCoreResult<()>
+    where
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send,
+    {
         let params = vec![resource.bvid.clone()];
         tokio::select! {
             res = self.request_proto::<BiliRes>(ApiKind::FetchRes, params, "/data") => {
@@ -97,14 +117,19 @@ impl ResOps for Bili {
                     }
                     resource.on_status(StatusFlags::FETCHED);
                 },
-            _ = tokio::signal::ctrl_c() => {
+            _ = f() => {
                 return Err(FavCoreError::Cancel);
             }
         }
         Ok(())
     }
 
-    async fn pull_res(&self, resource: &mut BiliRes) -> FavCoreResult<()> {
+    async fn pull_res<F, Fut, Any>(&self, resource: &mut Self::Res, f: F) -> FavCoreResult<()>
+    where
+        F: Fn() -> Fut + Send,
+        Fut: Future<Output = Any> + Send,
+        Any: Send,
+    {
         let Wbi { img_url, sub_url } = self
             .request_json::<Wbi>(ApiKind::Wbi, vec![], "/data/wbi_img")
             .await?;
@@ -131,7 +156,7 @@ impl ResOps for Bili {
                 }
                 Err(e) => return Err(e),
             };
-        self.download(resource, vec![audio, video]).await?;
+        self.download(resource, vec![audio, video], f).await?;
         Ok(())
     }
 }
@@ -241,7 +266,7 @@ mod tests {
         let mut sets = BiliSets::default();
         bili.fetch_sets(&mut sets).await.unwrap();
         let set = sets.iter_mut().min_by_key(|s| s.media_count).unwrap();
-        bili.fetch_set(set).await.unwrap();
+        bili.fetch_set(set, tokio::signal::ctrl_c).await.unwrap();
         bili.batch_fetch_res(set).await.unwrap();
         bili.batch_pull_res(set).await.unwrap();
         sets.write().unwrap();
@@ -254,7 +279,7 @@ mod tests {
         let mut sets = BiliSets::read().unwrap();
         bili.fetch_sets(&mut sets).await.unwrap();
         let set = sets.iter_mut().min_by_key(|s| s.media_count).unwrap();
-        bili.fetch_set(set).await.unwrap();
+        bili.fetch_set(set, tokio::signal::ctrl_c).await.unwrap();
         set.on_res_status(StatusFlags::TRACK);
         let mut sub = set.subset(|r| r.check_status(StatusFlags::TRACK));
         bili.batch_fetch_res(&mut sub).await.unwrap();
