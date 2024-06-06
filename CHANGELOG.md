@@ -12,6 +12,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [0.2.22] - 2024-06-06
 
+- fix: SIGINT handle
+
+## [0.2.22] - 2024-06-06
+
 - tracing: use stdout as tracing output while stderr as processbar
 
 ## [0.2.21] - 2024-06-05

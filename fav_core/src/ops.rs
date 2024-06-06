@@ -225,18 +225,14 @@ where
         .map(f)
         .buffer_unordered(8);
     loop {
-        tokio::select! {
-            res = stream.next() => {
-                match res {
-                    None => break,
-                    Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
-                    Some(Err(e))  => error!("{}", e),
-                    _ => {}
-                }
+        match stream.next().await {
+            None => break,
+            Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
+            Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
+                return Err(FavCoreError::NetworkError(e))
             }
-            _ = tokio::signal::ctrl_c() => {
-                return Err(FavCoreError::Cancel);
-            }
+            Some(Err(e)) => error!("{}", e),
+            _ => {}
         }
     }
     Ok(())
@@ -320,19 +316,14 @@ where
         .map(f)
         .buffer_unordered(8);
     loop {
-        tokio::select! {
-            res = stream.next() => {
-                match res {
-                    None => break,
-                    Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
-                    Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => return Err(FavCoreError::NetworkError(e)),
-                    Some(Err(e)) => error!("{}", e),
-                    _ => {}
-                }
+        match stream.next().await {
+            None => break,
+            Some(Err(FavCoreError::Cancel)) => return Err(FavCoreError::Cancel),
+            Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
+                return Err(FavCoreError::NetworkError(e))
             }
-            _ = tokio::signal::ctrl_c() => {
-                return Err(FavCoreError::Cancel);
-            }
+            Some(Err(e)) => error!("{}", e),
+            _ => {}
         }
     }
     Ok(())
