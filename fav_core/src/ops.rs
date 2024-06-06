@@ -83,11 +83,10 @@ pub trait LocalSetOps: Net + HttpConfig {
     /// The set type the operations on
     type Set: Set;
     /// Fetch one resource set,
-    /// `F: Fn() -> Future<...>`, if Future is ready, one can cleanup and
+    /// `cancelled: Future<...>`, if Future is ready, one can cleanup and
     /// shutdown gracefully, then return `FavCoreError::Cancel`.
-    async fn fetch_set<F, Fut, Any>(&self, set: &mut Self::Set, cancelled: F) -> FavCoreResult<()>
+    async fn fetch_set<Fut, Any>(&self, set: &mut Self::Set, cancelled: Fut) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send;
 }
@@ -101,27 +100,25 @@ pub trait LocalResOps: Net + HttpConfig {
     /// The resource type the operations on
     type Res: Res;
     /// Fetch one resource,
-    /// `F: Fn() -> Future<...>`, if Future is ready, one can cleanup and
+    /// `cancelled: Future<...>`, if Future is ready, one can cleanup and
     /// shutdown gracefully, then return `FavCoreError::Cancel`.
-    fn fetch_res<F, Fut, Any>(
+    async fn fetch_res<Fut, Any>(
         &self,
         resource: &mut Self::Res,
-        cancelled: F,
-    ) -> impl Future<Output = FavCoreResult<()>>
+        cancelled: Fut,
+    ) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send;
     /// Pull one resource,
-    /// `F: Fn() -> Future<...>`, if Future is ready, one can cleanup and
+    /// `cancelled: Future<...>`, if Future is ready, one can cleanup and
     /// shutdown gracefully, then return `FavCoreError::Cancel`.
-    async fn pull_res<F, Fut, Any>(
+    async fn pull_res<Fut, Any>(
         &self,
         resource: &mut Self::Res,
-        cancelled: F,
+        cancelled: Fut,
     ) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send;
 }
@@ -146,7 +143,7 @@ pub trait SetOpsExt: SetOps {
     where
         SS: Sets<Set = Self::Set>,
     {
-        batch_op_set(sets, |r, f| self.fetch_set(r, f))
+        batch_op_set(sets, |s, fut| self.fetch_set(s, fut))
     }
 }
 
@@ -157,14 +154,13 @@ pub trait SetOpsExt: SetOps {
 pub async fn batch_op_set<'a, SS, F, T>(sets: &'a mut SS, mut f: F) -> FavCoreResult<()>
 where
     SS: Sets + 'a,
-    F: FnMut(&'a mut SS::Set, Box<dyn FnOnce() -> WaitForCancellationFutureOwned + Send>) -> T,
+    F: FnMut(&'a mut SS::Set, WaitForCancellationFutureOwned) -> T,
     T: Future<Output = FavCoreResult<()>>,
 {
     let token = CancellationToken::new();
     let mut stream = tokio_stream::iter(sets.iter_mut())
         .map(|s| {
-            let token1 = token.clone();
-            let shutdown = Box::new(move || token1.cancelled_owned());
+            let shutdown = token.clone().cancelled_owned();
             let fut = f(s, shutdown);
             let token = token.clone();
             async move {
@@ -221,7 +217,7 @@ pub trait ResOpsExt: ResOps {
     where
         S: Set<Res = Self::Res>,
     {
-        batch_op_res(set, |r, f| self.fetch_res(r, f))
+        batch_op_res(set, |r, fut| self.fetch_res(r, fut))
     }
 
     /// **Asynchronously** pull resourses in set using [`ResOps::pull_res`].
@@ -229,7 +225,7 @@ pub trait ResOpsExt: ResOps {
     where
         S: Set<Res = Self::Res>,
     {
-        batch_op_res(set, |r, f| self.pull_res(r, f))
+        batch_op_res(set, |r, fut| self.pull_res(r, fut))
     }
 }
 
@@ -270,14 +266,13 @@ pub trait ResOpsExt: ResOps {
 pub async fn batch_op_res<'a, S, F, T>(set: &'a mut S, mut f: F) -> FavCoreResult<()>
 where
     S: Set + 'a,
-    F: FnMut(&'a mut S::Res, Box<dyn FnOnce() -> WaitForCancellationFutureOwned + Send>) -> T,
+    F: FnMut(&'a mut S::Res, WaitForCancellationFutureOwned) -> T,
     T: Future<Output = FavCoreResult<()>>,
 {
     let token = CancellationToken::new();
     let mut stream = tokio_stream::iter(set.iter_mut())
         .map(|s| {
-            let token1 = token.clone();
-            let shutdown = Box::new(move || token1.cancelled_owned());
+            let shutdown = token.clone().cancelled_owned();
             let fut = f(s, shutdown);
             let token = token.clone();
             async move {

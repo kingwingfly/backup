@@ -20,15 +20,14 @@ impl PathInfo for BiliSets {
 }
 
 impl SaveLocal for Bili {
-    async fn download<R, F, Fut, Any>(
+    async fn download<R, Fut, Any>(
         &self,
         res: &mut R,
         urls: Vec<reqwest::Url>,
-        f: F,
+        cancelled: Fut,
     ) -> FavCoreResult<()>
     where
         R: Res,
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -76,7 +75,7 @@ impl SaveLocal for Bili {
                 res.on_status(StatusFlags::SAVED);
                 Ok(())
             },
-            _ = f() => {
+            _ = cancelled => {
                 file_v.into_inner().unwrap().close()?;
                 file_a.into_inner().unwrap().close()?;
                 Err(FavCoreError::Cancel)

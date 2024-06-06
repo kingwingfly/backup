@@ -65,9 +65,8 @@ impl SetsOps for Bili {
 impl SetOps for Bili {
     type Set = BiliSet;
 
-    async fn fetch_set<F, Fut, Any>(&self, set: &mut Self::Set, cancelled: F) -> FavCoreResult<()>
+    async fn fetch_set<Fut, Any>(&self, set: &mut Self::Set, cancelled: Fut) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -94,7 +93,7 @@ impl SetOps for Bili {
             } => {
                 res
             }
-            _ = cancelled() =>  Err(FavCoreError::Cancel)
+            _ = cancelled =>  Err(FavCoreError::Cancel)
         }
     }
 }
@@ -102,9 +101,12 @@ impl SetOps for Bili {
 impl ResOps for Bili {
     type Res = BiliRes;
 
-    async fn fetch_res<F, Fut, Any>(&self, resource: &mut Self::Res, f: F) -> FavCoreResult<()>
+    async fn fetch_res<Fut, Any>(
+        &self,
+        resource: &mut Self::Res,
+        cancelled: Fut,
+    ) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -119,15 +121,18 @@ impl ResOps for Bili {
                 resource.on_status(StatusFlags::FETCHED);
                 Ok(())
             },
-            _ = f() => {
+            _ = cancelled => {
                 Err(FavCoreError::Cancel)
             }
         }
     }
 
-    async fn pull_res<F, Fut, Any>(&self, resource: &mut Self::Res, f: F) -> FavCoreResult<()>
+    async fn pull_res<Fut, Any>(
+        &self,
+        resource: &mut Self::Res,
+        cancelled: Fut,
+    ) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -157,7 +162,8 @@ impl ResOps for Bili {
                 }
                 Err(e) => return Err(e),
             };
-        self.download(resource, vec![audio, video], f).await?;
+        self.download(resource, vec![audio, video], cancelled)
+            .await?;
         Ok(())
     }
 }
@@ -267,7 +273,7 @@ mod tests {
         let mut sets = BiliSets::default();
         bili.fetch_sets(&mut sets).await.unwrap();
         let set = sets.iter_mut().min_by_key(|s| s.media_count).unwrap();
-        bili.fetch_set(set, tokio::signal::ctrl_c).await.unwrap();
+        bili.fetch_set(set, tokio::signal::ctrl_c()).await.unwrap();
         bili.batch_fetch_res(set).await.unwrap();
         bili.batch_pull_res(set).await.unwrap();
         sets.write().unwrap();
@@ -280,7 +286,7 @@ mod tests {
         let mut sets = BiliSets::read().unwrap();
         bili.fetch_sets(&mut sets).await.unwrap();
         let set = sets.iter_mut().min_by_key(|s| s.media_count).unwrap();
-        bili.fetch_set(set, tokio::signal::ctrl_c).await.unwrap();
+        bili.fetch_set(set, tokio::signal::ctrl_c()).await.unwrap();
         set.on_res_status(StatusFlags::TRACK);
         let mut sub = set.subset(|r| r.check_status(StatusFlags::TRACK));
         bili.batch_fetch_res(&mut sub).await.unwrap();

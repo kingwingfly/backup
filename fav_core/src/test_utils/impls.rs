@@ -41,18 +41,16 @@ impl AuthOps for App {
 impl ResOps for App {
     type Res = TestRes;
 
-    async fn fetch_res<F, Fut, Any>(&self, _: &mut Self::Res, _: F) -> FavCoreResult<()>
+    async fn fetch_res<Fut, Any>(&self, _: &mut Self::Res, _: Fut) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
         todo!()
     }
 
-    async fn pull_res<F, Fut, Any>(&self, _: &mut Self::Res, _: F) -> FavCoreResult<()>
+    async fn pull_res<Fut, Any>(&self, _: &mut Self::Res, _: Fut) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -63,9 +61,8 @@ impl ResOps for App {
 impl SetOps for App {
     type Set = TestSet;
 
-    async fn fetch_set<F, Fut, Any>(&self, _: &mut Self::Set, _: F) -> FavCoreResult<()>
+    async fn fetch_set<Fut, Any>(&self, _: &mut Self::Set, _: Fut) -> FavCoreResult<()>
     where
-        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
