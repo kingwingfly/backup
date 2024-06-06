@@ -213,7 +213,7 @@ pub(super) async fn daemon(sets: &mut BiliSets, interval: u64) -> FavCoreResult<
                 fire = false;
             }
             _ = tokio::time::sleep(duration), if !fire => fire = true,
-            _ = tokio::signal::ctrl_c() => {
+            _ = tokio::signal::ctrl_c(), if !fire => {
                 info!("Received Ctrl-C, exiting.");
                 break;
             }

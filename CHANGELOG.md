@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+### [0.2.28] - 2024-06-07
+
+- fix daemon: double SIGINT handlers when pulling
+
 ## [0.2.27] - 2024-06-07
 
 - improve follow [this](https://users.rust-lang.org/t/i-just-wrote-the-hardest-code-in-my-life-any-improvements/112596)
