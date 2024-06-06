@@ -172,6 +172,7 @@ where
             }
         })
         .buffer_unordered(8);
+    let mut result = Ok(());
     loop {
         tokio::select! {
             res = stream.next() => {
@@ -180,7 +181,7 @@ where
                     Some(Err(FavCoreError::Cancel)) => {}
                     Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
                         token.cancel();  // if already cancelled, it's handled by token itself
-                        error!("{}", FavCoreError::NetworkError(e));
+                        result = Err(FavCoreError::NetworkError(e));
                     }
                     Some(Err(e)) => error!("{}", e),
                     _ => {}
@@ -188,11 +189,11 @@ where
             }
             _ = tokio::signal::ctrl_c() => {
                 token.cancel();
-                error!("{}", FavCoreError::Cancel);
+                result = Err(FavCoreError::Cancel);
             }
         }
     }
-    Ok(())
+    result
 }
 
 impl<T> SetOpsExt for T where T: SetOps {}
@@ -285,6 +286,7 @@ where
             }
         })
         .buffer_unordered(8);
+    let mut result = Ok(());
     loop {
         tokio::select! {
             res = stream.next() => {
@@ -293,7 +295,7 @@ where
                     Some(Err(FavCoreError::Cancel)) => {}
                     Some(Err(FavCoreError::NetworkError(e))) if e.is_connect() => {
                         token.cancel();
-                        error!("{}", FavCoreError::NetworkError(e));
+                        result = Err(FavCoreError::NetworkError(e));
                     }
                     Some(Err(e)) => error!("{}", e),
                     _ => {}
@@ -301,11 +303,11 @@ where
             }
             _ = tokio::signal::ctrl_c() => {
                 token.cancel();
-                error!("{}", FavCoreError::Cancel);
+                result = Err(FavCoreError::Cancel);
             }
         }
     }
-    Ok(())
+    result
 }
 
 impl<T> ResOpsExt for T where T: ResOps {}
