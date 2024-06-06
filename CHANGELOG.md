@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+## [0.2.24] - 2024-06-06
+
+- fix: batch pull SIGINT hint missed
+
 ## [0.2.23] - 2024-06-06
 
 - core: refactored, more reliable
