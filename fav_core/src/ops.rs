@@ -190,7 +190,6 @@ where
                     _ => {}
                 }
             }
-
         } => {}
         _ = tokio::signal::ctrl_c() => {
             token.cancel();
@@ -304,7 +303,6 @@ where
                     _ => {}
                 }
             }
-
         } => {}
         _ = tokio::signal::ctrl_c() => {
             token.cancel();

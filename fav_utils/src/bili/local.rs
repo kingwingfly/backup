@@ -51,33 +51,21 @@ impl SaveLocal for Bili {
 
         let mut file_v = BufWriter::new(tempfile::NamedTempFile::new()?);
         let mut file_a = BufWriter::new(tempfile::NamedTempFile::new()?);
-        let mut finish_v = false;
-        let mut finish_a = false;
         tokio::select! {
-            res = async {
+            _ = async {
                 while let Some(chunk) = resp_v.chunk().await? {
                     pb.inc(chunk.len() as u64);
                     file_v.write_all(&chunk)?;
                 }
-                finish_v = true;
-                Ok(())
-            }, if !finish_v => {
-                res
-            },
-            res = async {
                 while let Some(chunk) = resp_a.chunk().await? {
                     pb.inc(chunk.len() as u64);
                     file_a.write_all(&chunk)?;
                 }
-                finish_a = true;
-                Ok(())
-            }, if !finish_a => {
-                res
-            },
-            _ = async {}, if finish_v && finish_a => {
                 file_v.flush().unwrap();
                 file_a.flush().unwrap();
                 pb.finish();
+                FavCoreResult::Ok(())
+            } => {
                 merge(
                     title,
                     &id,
