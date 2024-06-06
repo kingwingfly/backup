@@ -7,7 +7,7 @@ use futures::StreamExt;
 use reqwest::Response;
 use std::collections::HashMap;
 use tokio::time::{sleep, Duration};
-use tracing::{error, info};
+use tracing::info;
 use url::Url;
 
 const POLL_INTERVAL: u64 = 3;
@@ -65,9 +65,9 @@ impl SetsOps for Bili {
 impl SetOps for Bili {
     type Set = BiliSet;
 
-    async fn fetch_set<F, Fut, Any>(&self, set: &mut Self::Set, f: F) -> FavCoreResult<()>
+    async fn fetch_set<F, Fut, Any>(&self, set: &mut Self::Set, cancelled: F) -> FavCoreResult<()>
     where
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -80,21 +80,22 @@ impl SetOps for Bili {
                 let params = vec![id.clone(), pn, "20".to_string()];
                 self.request_proto::<BiliSet>(ApiKind::FetchSet, params, "/data")
             })
-            .buffer_unordered(10);
-        loop {
-            tokio::select! {
-                res = stream.next() => {
+            .buffer_unordered(8);
+        tokio::select! {
+            res = async {
+                while let Some(res) = stream.next().await {
                     match res {
-                         Some(Ok(res)) => *set |= res.with_res_status_on(StatusFlags::FAV),
-                         Some(Err(e)) => error!("{}", e),
-                         None => break
+                        Ok(res) => *set |= res.with_res_status_on(StatusFlags::FAV),
+                        Err(e) => return Err(e),
                     }
                 }
-                _ = f() => return Err(FavCoreError::Cancel)
+                info!("Fetch set<{}> successfully.", id);
+                Ok(())
+            } => {
+                res
             }
+            _ = cancelled() =>  Err(FavCoreError::Cancel)
         }
-        info!("Fetch set<{}> successfully.", id);
-        Ok(())
     }
 }
 
@@ -103,30 +104,30 @@ impl ResOps for Bili {
 
     async fn fetch_res<F, Fut, Any>(&self, resource: &mut Self::Res, f: F) -> FavCoreResult<()>
     where
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
         let params = vec![resource.bvid.clone()];
         tokio::select! {
             res = self.request_proto::<BiliRes>(ApiKind::FetchRes, params, "/data") => {
-                    match res {
-                        Ok(res) => *resource |= res,
-                        Err(e) if matches!(e, FavCoreError::NetworkError(_)) => Err(e)?,
-                        _ => resource.on_status(StatusFlags::EXPIRED),
-                    }
-                    resource.on_status(StatusFlags::FETCHED);
-                },
+                match res {
+                    Ok(res) => *resource |= res,
+                    Err(FavCoreError::NetworkError(e)) => Err(e)?,
+                    _ => resource.on_status(StatusFlags::EXPIRED),
+                }
+                resource.on_status(StatusFlags::FETCHED);
+                Ok(())
+            },
             _ = f() => {
-                return Err(FavCoreError::Cancel);
+                Err(FavCoreError::Cancel)
             }
         }
-        Ok(())
     }
 
     async fn pull_res<F, Fut, Any>(&self, resource: &mut Self::Res, f: F) -> FavCoreResult<()>
     where
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {

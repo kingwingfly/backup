@@ -70,11 +70,11 @@ pub trait SaveLocal: Net {
         &self,
         res: &mut R,
         urls: Vec<Url>,
-        f: F,
+        cancelled: F,
     ) -> impl Future<Output = FavCoreResult<()>>
     where
         R: Res,
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send;
 }

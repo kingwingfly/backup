@@ -43,7 +43,7 @@ impl ResOps for App {
 
     async fn fetch_res<F, Fut, Any>(&self, _: &mut Self::Res, _: F) -> FavCoreResult<()>
     where
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -52,7 +52,7 @@ impl ResOps for App {
 
     async fn pull_res<F, Fut, Any>(&self, _: &mut Self::Res, _: F) -> FavCoreResult<()>
     where
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -65,7 +65,7 @@ impl SetOps for App {
 
     async fn fetch_set<F, Fut, Any>(&self, _: &mut Self::Set, _: F) -> FavCoreResult<()>
     where
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {

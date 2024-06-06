@@ -4,7 +4,6 @@ use core::future::Future;
 use fav_core::prelude::*;
 use reqwest::header::CONTENT_LENGTH;
 use std::io::{BufWriter, Write as _};
-use tracing::error;
 
 impl PathInfo for Bili {
     #[cfg(test)]
@@ -29,7 +28,7 @@ impl SaveLocal for Bili {
     ) -> FavCoreResult<()>
     where
         R: Res,
-        F: Fn() -> Fut + Send,
+        F: FnOnce() -> Fut + Send,
         Fut: Future<Output = Any> + Send,
         Any: Send,
     {
@@ -54,59 +53,45 @@ impl SaveLocal for Bili {
         let mut file_a = BufWriter::new(tempfile::NamedTempFile::new()?);
         let mut finish_v = false;
         let mut finish_a = false;
-        let mut failed_reason = None;
-        loop {
-            tokio::select! {
-                chunk = resp_v.chunk(), if !finish_v => {
-                    match chunk {
-                        Ok(Some(chunk)) => {
-                            pb.inc(chunk.len() as u64);
-                            file_v.write_all(&chunk).unwrap();
-                        }
-                        Ok(None) => finish_v = true,
-                        Err(e) => {
-                            error!("Failed to download video: {}", res.id());
-                            failed_reason = Some(e);
-                        }
-                    }
-                },
-                chunk = resp_a.chunk(), if !finish_a => {
-                    match chunk {
-                        Ok(Some(chunk)) => {
-                            pb.inc(chunk.len() as u64);
-                            file_a.write_all(&chunk).unwrap();
-                        }
-                        Ok(None) => finish_a = true,
-                        Err(e) => {
-                            error!("Failed to download video: {}", res.id());
-                            failed_reason = Some(e);
-                        }
-                    }
-                },
-                _ = async {}, if finish_v && finish_a => {
-                    file_v.flush().unwrap();
-                    file_a.flush().unwrap();
-                    pb.finish();
-                    merge(
-                        title,
-                        &id,
-                        file_v.into_inner().unwrap().path().to_str().unwrap(),
-                        file_a.into_inner().unwrap().path().to_str().unwrap(),
-                    )
-                    .await?;
-                    res.on_status(StatusFlags::SAVED);
-                    return Ok(())
-                },
-                _ = async {}, if failed_reason.is_some() => {
-                    file_v.into_inner().unwrap().close()?;
-                    file_a.into_inner().unwrap().close()?;
-                    return Err(failed_reason.unwrap().into());
-                },
-                _ = f() => {
-                    file_v.into_inner().unwrap().close()?;
-                    file_a.into_inner().unwrap().close()?;
-                    return Err(FavCoreError::Cancel)
+        tokio::select! {
+            res = async {
+                while let Some(chunk) = resp_v.chunk().await? {
+                    pb.inc(chunk.len() as u64);
+                    file_v.write_all(&chunk)?;
                 }
+                finish_v = true;
+                Ok(())
+            }, if !finish_v => {
+                res
+            },
+            res = async {
+                while let Some(chunk) = resp_a.chunk().await? {
+                    pb.inc(chunk.len() as u64);
+                    file_a.write_all(&chunk)?;
+                }
+                finish_a = true;
+                Ok(())
+            }, if !finish_a => {
+                res
+            },
+            _ = async {}, if finish_v && finish_a => {
+                file_v.flush().unwrap();
+                file_a.flush().unwrap();
+                pb.finish();
+                merge(
+                    title,
+                    &id,
+                    file_v.into_inner().unwrap().path().to_str().unwrap(),
+                    file_a.into_inner().unwrap().path().to_str().unwrap(),
+                )
+                .await?;
+                res.on_status(StatusFlags::SAVED);
+                Ok(())
+            },
+            _ = f() => {
+                file_v.into_inner().unwrap().close()?;
+                file_a.into_inner().unwrap().close()?;
+                Err(FavCoreError::Cancel)
             }
         }
     }
