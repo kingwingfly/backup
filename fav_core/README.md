@@ -63,4 +63,4 @@ An example can be found in [fav](https://github.com/kingwingfly/fav) repo.
 # CHANGELOG
 
 - 0.1.1 -> 0.1.2: `XXOpsExt` needs `batch_size` passed so that users can define the number of jobs concurrently.
-- 0.0.X -> 0.1.X: `Ops` related traits' methods need `F: Fn() -> Future<...>`, if Future is ready, one can cleanup, shutdown gracefully and return `FavCoreError::Cancel`. And `OpsExt` methods handle SIGINT based on this, keeps things reliable.
+- 0.0.X -> 0.1.X: `Ops` related traits' methods need `Fut: Future<...>`, if Future is ready, one can cleanup, shutdown gracefully and return `FavCoreError::Cancel`. And `OpsExt` methods handle SIGINT based on this, keeps things reliable.
