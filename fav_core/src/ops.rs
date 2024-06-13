@@ -134,16 +134,20 @@ pub trait LocalResOps: Net + HttpConfig {
 /// let app = App::default();
 /// let mut sets = TestSets::default();
 /// let mut sub = sets.subset(|r| r.check_status(StatusFlags::TRACK));
-/// app.batch_fetch_set(&mut sub);
+/// app.batch_fetch_set(&mut sub, 8);
 /// # };
 /// ```
 pub trait SetOpsExt: SetOps {
     /// **Asynchronously** fetch sets in sets using [`SetOps::fetch_set`].
-    fn batch_fetch_set<'a, SS>(&self, sets: &'a mut SS) -> impl Future<Output = FavCoreResult<()>>
+    fn batch_fetch_set<'a, SS>(
+        &self,
+        sets: &'a mut SS,
+        batch_size: usize,
+    ) -> impl Future<Output = FavCoreResult<()>>
     where
         SS: Sets<Set = Self::Set>,
     {
-        batch_op_set(sets, |s, fut| self.fetch_set(s, fut))
+        batch_op_set(sets, |s, fut| self.fetch_set(s, fut), batch_size)
     }
 }
 
@@ -151,7 +155,11 @@ pub trait SetOpsExt: SetOps {
 /// You can use it like [`batch_op_set`]
 /// However, it's better to use [`Sets::subset`] and [`SetOpsExt`] instead.
 /// See [`SetOpsExt`] for more information.
-pub async fn batch_op_set<'a, SS, F, T>(sets: &'a mut SS, mut f: F) -> FavCoreResult<()>
+pub async fn batch_op_set<'a, SS, F, T>(
+    sets: &'a mut SS,
+    mut f: F,
+    batch_size: usize,
+) -> FavCoreResult<()>
 where
     SS: Sets + 'a,
     F: FnMut(&'a mut SS::Set, WaitForCancellationFutureOwned) -> T,
@@ -171,7 +179,7 @@ where
                 }
             }
         })
-        .buffer_unordered(8);
+        .buffer_unordered(batch_size);
     let mut result = Ok(());
     tokio::select! {
         _ = async {
@@ -208,24 +216,32 @@ impl<T> SetOpsExt for T where T: SetOps {}
 /// let app = App::default();
 /// let mut set = TestSet::default();
 /// let mut sub = set.subset(|r| r.check_status(StatusFlags::TRACK));
-/// app.batch_fetch_res(&mut sub);
+/// app.batch_fetch_res(&mut sub, 8);
 /// # };
 /// ```
 pub trait ResOpsExt: ResOps {
     /// **Asynchronously** fetch resourses in set using [`ResOps::fetch_res`].
-    fn batch_fetch_res<'a, S>(&self, set: &'a mut S) -> impl Future<Output = FavCoreResult<()>>
+    fn batch_fetch_res<'a, S>(
+        &self,
+        set: &'a mut S,
+        batch_size: usize,
+    ) -> impl Future<Output = FavCoreResult<()>>
     where
         S: Set<Res = Self::Res>,
     {
-        batch_op_res(set, |r, fut| self.fetch_res(r, fut))
+        batch_op_res(set, |r, fut| self.fetch_res(r, fut), batch_size)
     }
 
     /// **Asynchronously** pull resourses in set using [`ResOps::pull_res`].
-    fn batch_pull_res<'a, S>(&self, set: &'a mut S) -> impl Future<Output = FavCoreResult<()>>
+    fn batch_pull_res<'a, S>(
+        &self,
+        set: &'a mut S,
+        batch_size: usize,
+    ) -> impl Future<Output = FavCoreResult<()>>
     where
         S: Set<Res = Self::Res>,
     {
-        batch_op_res(set, |r, fut| self.pull_res(r, fut))
+        batch_op_res(set, |r, fut| self.pull_res(r, fut), batch_size)
     }
 }
 
@@ -258,12 +274,16 @@ pub trait ResOpsExt: ResOps {
 ///     set: &mut set,
 ///     f: |r| r.check_status(StatusFlags::TRACK)
 /// };
-/// batch_op_res(&mut sub, |r, fut| app.fetch_res(r, fut)).await.unwrap();
+/// batch_op_res(&mut sub, |r, fut| app.fetch_res(r, fut), 8).await.unwrap();
 /// # };
 /// ```
 /// However, it's better to use [`Set::subset`] and [`ResOpsExt`] instead.
 /// See [`ResOpsExt`] for more information.
-pub async fn batch_op_res<'a, S, F, T>(set: &'a mut S, mut f: F) -> FavCoreResult<()>
+pub async fn batch_op_res<'a, S, F, T>(
+    set: &'a mut S,
+    mut f: F,
+    batch_size: usize,
+) -> FavCoreResult<()>
 where
     S: Set + 'a,
     F: FnMut(&'a mut S::Res, WaitForCancellationFutureOwned) -> T,
@@ -283,7 +303,7 @@ where
                 }
             }
         })
-        .buffer_unordered(8);
+        .buffer_unordered(batch_size);
     let mut result = Ok(());
     tokio::select! {
         _ = async {

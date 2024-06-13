@@ -274,8 +274,8 @@ mod tests {
         bili.fetch_sets(&mut sets).await.unwrap();
         let set = sets.iter_mut().min_by_key(|s| s.media_count).unwrap();
         bili.fetch_set(set, tokio::signal::ctrl_c()).await.unwrap();
-        bili.batch_fetch_res(set).await.unwrap();
-        bili.batch_pull_res(set).await.unwrap();
+        bili.batch_fetch_res(set, 8).await.unwrap();
+        bili.batch_pull_res(set, 8).await.unwrap();
         sets.write().unwrap();
     }
 
@@ -289,6 +289,6 @@ mod tests {
         bili.fetch_set(set, tokio::signal::ctrl_c()).await.unwrap();
         set.on_res_status(StatusFlags::TRACK);
         let mut sub = set.subset(|r| r.check_status(StatusFlags::TRACK));
-        bili.batch_fetch_res(&mut sub).await.unwrap();
+        bili.batch_fetch_res(&mut sub, 8).await.unwrap();
     }
 }

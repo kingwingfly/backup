@@ -25,7 +25,7 @@ pub trait Set {
     /// let app = App::default();
     /// let mut set = TestSet::default();
     /// let mut sub = set.subset(|r| r.check_status(StatusFlags::TRACK));
-    /// app.batch_fetch_res(&mut sub);
+    /// app.batch_fetch_res(&mut sub, 8);
     /// # };
     /// ```
     fn subset<F>(&mut self, filter: F) -> SubSet<Self, F>
@@ -57,7 +57,7 @@ pub trait Sets {
     /// let app = App::default();
     /// let mut sets = TestSets::default();
     /// let mut sub = sets.subset(|r| r.check_status(StatusFlags::TRACK));
-    /// app.batch_fetch_set(&mut sub);
+    /// app.batch_fetch_set(&mut sub, 8);
     /// # };
     /// ```
     fn subset<F>(&mut self, filter: F) -> SubSets<Self, F>

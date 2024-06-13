@@ -80,14 +80,14 @@ pub(super) async fn fetch(sets: &mut BiliSets) -> FavCoreResult<()> {
     let bili = Bili::read()?;
     bili.fetch_sets(sets).await?;
     let mut sub = sets.subset(|s| s.check_status(StatusFlags::TRACK));
-    bili.batch_fetch_set(&mut sub).await?;
+    bili.batch_fetch_set(&mut sub, 8).await?;
     for set in sub.iter_mut() {
         let mut sub = set.subset(|r| {
             r.check_status(StatusFlags::TRACK)
                 & !r.check_status(StatusFlags::FETCHED)
                 & !r.check_status(StatusFlags::EXPIRED)
         });
-        bili.batch_fetch_res(&mut sub).await?;
+        bili.batch_fetch_res(&mut sub, 8).await?;
     }
     Ok(())
 }
@@ -154,7 +154,7 @@ pub(super) async fn pull_all(sets: &mut BiliSets) -> FavCoreResult<()> {
                 & !r.check_status(StatusFlags::EXPIRED)
                 & r.check_status(StatusFlags::TRACK | StatusFlags::FETCHED)
         });
-        bili.batch_pull_res(&mut sub).await?;
+        bili.batch_pull_res(&mut sub, 8).await?;
     }
     Ok(())
 }
@@ -170,7 +170,7 @@ pub(super) async fn pull(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult
                     & !r.check_status(StatusFlags::EXPIRED)
                     & r.check_status(StatusFlags::TRACK | StatusFlags::FETCHED)
             });
-            bili.batch_pull_res(&mut sub).await?;
+            bili.batch_pull_res(&mut sub, 8).await?;
         }
     }
     let mut sub = sets.subset(|s| s.check_status(StatusFlags::TRACK));
@@ -181,7 +181,7 @@ pub(super) async fn pull(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult
                 & r.check_status(StatusFlags::TRACK | StatusFlags::FETCHED)
                 & ids.contains(&r.id())
         });
-        bili.batch_pull_res(&mut sub).await?;
+        bili.batch_pull_res(&mut sub, 8).await?;
     }
 
     Ok(())
