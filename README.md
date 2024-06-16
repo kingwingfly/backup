@@ -141,16 +141,15 @@ Options:
 ### Example
 
 ```sh
-# auto complete is supported; i.e. fish
+# auto completion is supported; e.g. fish
 $ fav completion fish > ~/.config/fish/completions/fav.fish
-# For windows user
+# For Windows users
 $ echo "fav completion powershell | Out-String | Invoke-Expression" >> $PROFILE
 # init for bilibili
 $ fav init
 # scan code to login
 $ fav auth login
-# fetch favorite list
-$ fav fetch
+# a fetch will auto run after login
 # show status
 $ fav status -s
 # track list
