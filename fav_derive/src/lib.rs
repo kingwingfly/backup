@@ -50,7 +50,7 @@ pub fn derive_api(input: TokenStream) -> TokenStream {
 /// ```
 /// Default fields are `id` and `title`.
 /// In practice, the `Res` is comming from `protobuf-codegen`,
-/// making the attribute `attr` referring to the fields needed.
+/// making the attribute `attr` `title` refer to the fields is needed.
 #[proc_macro_derive(Attr, attributes(attr))]
 pub fn derive_attr(input: TokenStream) -> TokenStream {
     attr::derive_attr(input)
@@ -74,7 +74,7 @@ pub fn derive_attr(input: TokenStream) -> TokenStream {
 /// ```
 /// Default field is `status`.
 /// In practice, the `Res` is comming from `protobuf-codegen`,
-/// making the attribute `status` referring to the fields needed.
+/// making the attribute `status` refer to the field is needed.
 #[proc_macro_derive(Status, attributes(status))]
 pub fn derive_status(input: TokenStream) -> TokenStream {
     status::derive_status(input)

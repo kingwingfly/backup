@@ -9,6 +9,9 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+### [0.2.28] - 2024-06-07
+
+- improve: annotation of `fav_derive`
 
 ## [0.2.28] - 2024-06-07
 
