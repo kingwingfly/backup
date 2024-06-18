@@ -9,6 +9,9 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+### [0.2.30] - 2024-06-18
+
+- fix: wrong hint of `fav status -h`
 
 ## [0.2.29] - 2024-06-18
 

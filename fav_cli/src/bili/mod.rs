@@ -39,7 +39,7 @@ enum Commands {
     },
     /// Fetch from remote
     Fetch,
-    /// Show status of local, default to show resource status
+    /// Show status of local, default to show sets' status
     Status {
         /// Show resource status
         #[arg(value_hint = ValueHint::Other)]
