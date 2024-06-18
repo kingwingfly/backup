@@ -7,21 +7,23 @@ impl BitOrAssign for BiliSets {
         let mut cache = vec![];
         rhs.list
             .into_iter()
-            .for_each(|s| match self.iter_mut().find(|s1| s1.id == s.id) {
+            .for_each(|mut s| match self.iter_mut().find(|s1| s1.id == s.id) {
                 Some(s1) => {
-                    if s.media_count == 0
-                        && !s1.check_status(StatusFlags::EXPIRED)
-                        && s.title == "该合集已失效"
-                    {
-                        s1.title += "（已失效）";
-                        s1.on_status(StatusFlags::EXPIRED);
-                    } else {
+                    if s.media_count != 0 && s.title != "该合集已失效" {
                         s1.title = s.title;
                         s1.media_count = s.media_count;
                         s1.off_status(StatusFlags::EXPIRED);
+                    } else if !s1.check_status(StatusFlags::EXPIRED) {
+                        s1.title += "（已失效）";
+                        s1.on_status(StatusFlags::EXPIRED);
                     }
                 }
-                None => cache.push(s),
+                None => {
+                    if s.media_count == 0 && s.title == "该合集已失效" {
+                        s.on_status(StatusFlags::EXPIRED);
+                    }
+                    cache.push(s)
+                }
             });
         self.list.extend(cache);
     }
