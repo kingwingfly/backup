@@ -14,7 +14,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let gen = std::fs::read_to_string(&path)?;
     let processed = gen.replace("#!", "//").replace("//!", "//");
     std::fs::write(path, processed)?;
-    println!("cargo:return-if-changed=proto");
+    println!("cargo:return-if-changed=proto/bili.proto");
     println!("cargo:return-if-changed=build.rs");
     Ok(())
 }

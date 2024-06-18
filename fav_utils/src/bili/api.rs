@@ -11,7 +11,9 @@ impl ApiProvider for Bili {
             ApiKind::QrPoll => &QrPollApi,
             ApiKind::Logout => &LogoutApi,
             ApiKind::FetchSets => &SetsApi,
+            ApiKind::FetchAchivesSets => &AchivesSetsApi,
             ApiKind::FetchSet => &SetApi,
+            ApiKind::FetchAchivesSet => &AchivesSetApi,
             ApiKind::FetchRes => &ResApi,
             ApiKind::Wbi => &WbiApi,
             ApiKind::Pull => &PullApi,
@@ -25,7 +27,9 @@ pub enum ApiKind {
     QrPoll,
     Logout,
     FetchSets,
+    FetchAchivesSets,
     FetchSet,
+    FetchAchivesSet,
     FetchRes,
     Wbi,
     Pull,
@@ -50,8 +54,16 @@ struct LogoutApi;
 struct SetsApi;
 
 #[derive(Api)]
+#[api(endpoint("https://api.bilibili.com/x/v3/fav/folder/collected/list"), params(&["up_mid", "pn", "ps", "platform"]), cookies(&["SESSDATA"]))]
+struct AchivesSetsApi;
+
+#[derive(Api)]
 #[api(endpoint("https://api.bilibili.com/x/v3/fav/resource/list"), params(&["media_id", "pn", "ps"]), cookies(&["SESSDATA"]))]
 struct SetApi;
+
+#[derive(Api)]
+#[api(endpoint("https://api.bilibili.com/x/polymer/web-space/seasons_archives_list"), params(&["mid", "season_id", "page_num", "page_size"]), cookies(&["SESSDATA"]))]
+struct AchivesSetApi;
 
 #[derive(Api)]
 #[api(endpoint("https://api.bilibili.com/x/web-interface/view"), params(&["bvid"]), cookies(&["SESSDATA"]))]

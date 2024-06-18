@@ -62,9 +62,15 @@ pub(super) fn status_all(
     show_sets: bool,
     show_res: bool,
     only_track: bool,
+    show_all: bool,
 ) -> FavCoreResult<()> {
     if show_sets {
-        let sub = sets.subset(|s| s.check_status(StatusFlags::TRACK) | !only_track);
+        let sub = sets.subset(|s| {
+            (s.check_status(StatusFlags::TRACK) | !only_track)
+                & ((s.upper.mid == 0 // self-created set's mid is 0
+                    && !s.check_status(StatusFlags::EXPIRED))
+                    | show_all)
+        });
         sub.table();
     }
     if show_res {
@@ -79,7 +85,8 @@ pub(super) fn status_all(
 pub(super) async fn fetch(sets: &mut BiliSets) -> FavCoreResult<()> {
     let bili = Bili::read()?;
     bili.fetch_sets(sets).await?;
-    let mut sub = sets.subset(|s| s.check_status(StatusFlags::TRACK));
+    let mut sub =
+        sets.subset(|s| s.check_status(StatusFlags::TRACK) & !s.check_status(StatusFlags::EXPIRED));
     bili.batch_fetch_set(&mut sub, 8).await?;
     for set in sub.iter_mut() {
         let mut sub = set.subset(|r| {

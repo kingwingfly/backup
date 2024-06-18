@@ -9,8 +9,17 @@ impl BitOrAssign for BiliSets {
             .into_iter()
             .for_each(|s| match self.iter_mut().find(|s1| s1.id == s.id) {
                 Some(s1) => {
-                    s1.media_count = s.media_count;
-                    *s1 |= s
+                    if s.media_count == 0
+                        && !s1.check_status(StatusFlags::EXPIRED)
+                        && s.title == "该合集已失效"
+                    {
+                        s1.title += "（已失效）";
+                        s1.on_status(StatusFlags::EXPIRED);
+                    } else {
+                        s1.title = s.title;
+                        s1.media_count = s.media_count;
+                        s1.off_status(StatusFlags::EXPIRED);
+                    }
                 }
                 None => cache.push(s),
             });
@@ -21,14 +30,17 @@ impl BitOrAssign for BiliSets {
 impl BitOrAssign for BiliSet {
     /// Merge two sets. If the left set is track, the resources merged into will be track
     fn bitor_assign(&mut self, rhs: Self) {
-        rhs.medias.into_iter().for_each(|mut r| {
-            if self.iter().all(|r1| r1.bvid != r.bvid) {
-                if self.check_status(StatusFlags::TRACK) {
-                    r.on_status(StatusFlags::TRACK);
+        rhs.medias
+            .into_iter()
+            .chain(rhs.archives)
+            .for_each(|mut r| {
+                if self.iter().all(|r1| r1.bvid != r.bvid) {
+                    if self.check_status(StatusFlags::TRACK) {
+                        r.on_status(StatusFlags::TRACK);
+                    }
+                    self.medias.push(r);
                 }
-                self.medias.push(r);
-            }
-        });
+            });
     }
 }
 
@@ -57,11 +69,11 @@ impl Set for BiliSet {
     type Res = BiliRes;
 
     fn iter(&self) -> impl Iterator<Item = &BiliRes> {
-        self.medias.iter()
+        self.medias.iter().chain(self.archives.iter())
     }
 
     fn iter_mut(&mut self) -> impl Iterator<Item = &mut BiliRes> {
-        self.medias.iter_mut()
+        self.medias.iter_mut().chain(self.archives.iter_mut())
     }
 }
 
