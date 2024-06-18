@@ -33,6 +33,8 @@ message BiliSet {
     int32 media_count = 4;
     Upper upper = 14;
     repeated BiliRes medias = 15;
+    repeated BiliRes archives = 16;
+    bool is_archives_list = 17;
 }
 
 message BiliSets {

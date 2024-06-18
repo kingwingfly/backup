@@ -53,6 +53,9 @@ enum Commands {
         /// Show tracked only
         #[arg(long, short)]
         track: bool,
+        /// Show sets including AchivesSets(合集)
+        #[arg(long, short)]
+        all: bool,
     },
     /// Track a remote source
     Track {
@@ -114,7 +117,7 @@ impl Cli {
                 clap_complete::generate(shell, &mut cmd, "fav", &mut std::io::stdout());
             }
             subcmd => {
-                let mut sets = BiliSets::read()?;
+                let mut sets = BiliSets::read().unwrap_or_default();
                 let res = match subcmd {
                     Commands::Auth { subcmd: authcmd } => {
                         match authcmd {
@@ -132,21 +135,24 @@ impl Cli {
                         sets: show_sets,
                         res: show_res,
                         track: only_track,
+                        all: show_all,
                     } => match id {
                         Some(id) => {
-                            if show_sets | show_res | only_track {
+                            if show_sets | show_res | only_track | show_all {
                                 Cli::command()
                                     .error(
                                         ErrorKind::ArgumentConflict,
-                                        "The id to 'fav status' does not take -s, -r, -t, options.",
+                                        "The id to 'fav status' does not take -s, -r, -t, -a, options.",
                                     )
                                     .exit();
                             }
                             status(&mut sets, id)
                         }
                         None => match (show_sets, show_res) {
-                            (false, false) => status_all(&mut sets, true, false, only_track),
-                            _ => status_all(&mut sets, show_sets, show_res, only_track),
+                            (false, false) => {
+                                status_all(&mut sets, true, false, only_track, show_all)
+                            }
+                            _ => status_all(&mut sets, show_sets, show_res, only_track, show_all),
                         },
                     },
                     Commands::Fetch => fetch(&mut sets).await,

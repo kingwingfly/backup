@@ -58,6 +58,25 @@ impl SetsOps for Bili {
             .request_proto(ApiKind::FetchSets, params, "/data")
             .await?;
         info!("Fetch sets successfully.");
+        let mut pn = 1;
+        loop {
+            let params = vec![
+                self.cookies().get("DedeUserID").expect(HINT).to_owned(),
+                pn.to_string(),
+                "20".to_string(),
+                "web".to_string(),
+            ];
+            let resp = self.request(ApiKind::FetchAchivesSets, params).await?;
+            let json: serde_json::Value = fav_core::ops::resp2json(resp, "/data").await?;
+            let mut new: BiliSets = fav_core::ops::json2proto(&json)?;
+            new.iter_mut().for_each(|set| set.is_archives_list = true);
+            *sets |= new;
+            if !json["has_more"].as_bool().unwrap() {
+                break;
+            }
+            pn += 1;
+        }
+        info!("Fetch archives sets successfully.");
         Ok(())
     }
 }
@@ -71,20 +90,28 @@ impl SetOps for Bili {
         Any: Send,
     {
         let id = set.id.to_string();
+        let is_archives_list = set.is_archives_list;
+        let mid = set.upper.mid.to_string();
         info!("Fetching set<{}>", id);
         let page_count = set.media_count.saturating_sub(1) / 20 + 1;
         let mut stream = tokio_stream::iter(1..=page_count)
             .map(|pn| {
                 let pn = pn.to_string();
-                let params = vec![id.clone(), pn, "20".to_string()];
-                self.request_proto::<BiliSet>(ApiKind::FetchSet, params, "/data")
+                let mut params = vec![id.clone(), pn, "20".to_string()];
+                match is_archives_list {
+                    true => {
+                        params.insert(0, mid.clone());
+                        self.request_proto::<BiliSet>(ApiKind::FetchAchivesSet, params, "/data")
+                    }
+                    false => self.request_proto::<BiliSet>(ApiKind::FetchSet, params, "/data"),
+                }
             })
             .buffer_unordered(8);
         tokio::select! {
             res = async {
                 while let Some(res) = stream.next().await {
                     match res {
-                        Ok(res) => *set |= res.with_res_status_on(StatusFlags::FAV),
+                        Ok(s) => *set |= s.with_res_status_on(StatusFlags::FAV),
                         Err(e) => return Err(e),
                     }
                 }
@@ -93,7 +120,7 @@ impl SetOps for Bili {
             } => {
                 res
             }
-            _ = cancelled =>  Err(FavCoreError::Cancel)
+            _ = cancelled => Err(FavCoreError::Cancel)
         }
     }
 }
