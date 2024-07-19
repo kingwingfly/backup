@@ -79,7 +79,7 @@ Back up your favorite bilibili online resources with CLI.
 
 You can download a release [here](https://github.com/kingwingfly/fav/releases).
 
-For Arch Linux users, you can `sudo pacman -S fav` maybe, someone has maken it a package.
+For Arch Linux users, you can `yay -S fav-git` maybe, someone has maken it a package.
 
 ### Prerequisites
 
