@@ -205,6 +205,7 @@ pub(super) async fn daemon(sets: &mut BiliSets, interval: u64) -> FavCoreResult<
     loop {
         tokio::select! {
             res = pull_all(sets), if fire => {
+                sets.write()?;
                 if let Err(e) = res {
                     error!("{}", e);
                 }
