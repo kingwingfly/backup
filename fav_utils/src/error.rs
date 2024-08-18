@@ -15,6 +15,8 @@ pub enum FavUtilsError {
     QrExpired,
     /// FFMPEG merge failed
     MergeFailed,
+    /// FFMPEG not found
+    FFMPEGNotFound,
 }
 
 impl std::error::Error for FavUtilsError {}
@@ -27,6 +29,9 @@ impl std::fmt::Display for FavUtilsError {
             FavUtilsError::NoCookie => write!(f, "No cookie"),
             FavUtilsError::QrExpired => write!(f, "Qr code expired"),
             FavUtilsError::MergeFailed => write!(f, "FFMPEG merge failed"),
+            FavUtilsError::FFMPEGNotFound => {
+                write!(f, "FFMPEG should be able to be directly called")
+            }
         }
     }
 }

@@ -3,6 +3,7 @@ use fav_core::prelude::*;
 use fav_core::status::SetStatusExt as _;
 use fav_core::visual::{TableRes as _, TableSet as _, TableSets as _};
 use fav_utils::bili::{Bili, BiliSets};
+use fav_utils::FavUtilsError;
 use std::io::Write as _;
 use tracing::{error, info, warn};
 
@@ -226,6 +227,19 @@ pub(super) async fn daemon(sets: &mut BiliSets, interval: u64) -> FavCoreResult<
                 break;
             }
         }
+    }
+    Ok(())
+}
+
+pub(super) fn check_ffmpeg() -> FavCoreResult<()> {
+    let status = std::process::Command::new("ffmpeg")
+        .arg("-version")
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status()
+        .unwrap();
+    if !status.success() {
+        return Err(FavUtilsError::FFMPEGNotFound.into());
     }
     Ok(())
 }

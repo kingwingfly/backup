@@ -158,11 +158,17 @@ impl Cli {
                     Commands::Fetch => fetch(&mut sets).await,
                     Commands::Track { id: ids } => track(&mut sets, ids),
                     Commands::Untrack { id: ids } => untrack(&mut sets, ids),
-                    Commands::Pull { id } => match id {
-                        Some(ids) => pull(&mut sets, ids).await,
-                        None => pull_all(&mut sets).await,
-                    },
-                    Commands::Daemon { interval } => daemon(&mut sets, interval).await,
+                    Commands::Pull { id } => {
+                        check_ffmpeg()?;
+                        match id {
+                            Some(ids) => pull(&mut sets, ids).await,
+                            None => pull_all(&mut sets).await,
+                        }
+                    }
+                    Commands::Daemon { interval } => {
+                        check_ffmpeg()?;
+                        daemon(&mut sets, interval).await
+                    }
                     _ => unreachable!(),
                 };
                 sets.write()?;
