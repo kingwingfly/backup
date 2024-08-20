@@ -184,8 +184,7 @@ pub(super) async fn pull(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult
     let mut sub = sets.subset(|s| s.check_status(StatusFlags::TRACK));
     for set in sub.iter_mut() {
         let mut sub = set.subset(|r| {
-            !r.check_status(StatusFlags::SAVED)
-                & !r.check_status(StatusFlags::EXPIRED)
+            !r.check_status(StatusFlags::EXPIRED)
                 & r.check_status(StatusFlags::TRACK | StatusFlags::FETCHED)
                 & ids.contains(&r.id())
         });

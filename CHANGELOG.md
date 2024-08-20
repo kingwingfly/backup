@@ -9,6 +9,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+## [0.2.32] - 2024-08-21
+
+- fix: `fav pull <res_id>` will now forcely pull the resource.
+
 ## [0.2.31] - 2024-08-18
 
 - improve: `pull` will check ffmpeg before running.
