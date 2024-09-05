@@ -160,6 +160,8 @@ $ fav pull
 $ fav untrack <list_id/bvid>
 # daemon, run `fav pull` every 30 minutes
 $ fav daemon 30
+# after fetching, you can find your favorite upper
+$ fav status -r | awk -F '│' '{print $3}' | grep -v '^\s*$' | sort | uniq -c | sort -n
 ```
 
 _For more examples, please refer to the [Documentation](https://github.com/kingwingfly/fav)_
