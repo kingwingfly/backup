@@ -36,5 +36,5 @@ impl CustomizeCallback for MyCustomizeCallback {
 
 const DERIVE_UPPER: &str = "#[derive(fav_core::attr::Attr)]\n#[attr(id(mid), title(name))]";
 const DERIVE_BILIRES: &str =
-    "#[derive(fav_core::attr::Attr, fav_core::status::Status)]\n#[attr(id(bvid))]";
+    "#[derive(fav_core::attr::Attr, fav_core::status::Status, fav_core::attr::Owner)]\n#[attr(id(bvid))]";
 const DERIVE_BILISET: &str = "#[derive(fav_core::attr::Attr, fav_core::status::Status)]";

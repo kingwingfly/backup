@@ -102,6 +102,12 @@ impl Attr for TestRes {
     }
 }
 
+impl Owner for TestRes {
+    fn owner(&self) -> &str {
+        todo!()
+    }
+}
+
 impl Status for TestRes {
     fn status(&self) -> i32 {
         self.status

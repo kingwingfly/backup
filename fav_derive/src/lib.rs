@@ -6,6 +6,7 @@ use proc_macro::TokenStream;
 
 mod api;
 mod attr;
+mod owner;
 mod status;
 
 /// A derive macro helping implemente [`Api`] trait.
@@ -78,4 +79,10 @@ pub fn derive_attr(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(Status, attributes(status))]
 pub fn derive_status(input: TokenStream) -> TokenStream {
     status::derive_status(input)
+}
+
+/// A derive macro helping implemente [`Owner`] trait.
+#[proc_macro_derive(Owner, attributes(owner))]
+pub fn derive_owner(input: TokenStream) -> TokenStream {
+    owner::derive_owner(input)
 }

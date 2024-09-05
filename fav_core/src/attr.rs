@@ -4,7 +4,7 @@
 use std::fmt::Display;
 
 #[cfg(feature = "derive")]
-pub use fav_derive::Attr;
+pub use fav_derive::{Attr, Owner};
 
 /// The resource's id.
 /// # Example
@@ -85,6 +85,12 @@ pub trait Attr {
 pub trait Count {
     /// Return the count of resources in set
     fn count(&self) -> i32;
+}
+
+/// The resource's owner
+pub trait Owner {
+    /// Return the owner of the resource
+    fn owner(&self) -> &str;
 }
 
 impl From<i64> for Id<'_> {

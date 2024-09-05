@@ -9,6 +9,11 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+## [0.2.33] - 2024-09-05
+
+- fav status will show name of resource creator.
+- enhance: Owner trait for resource.
+
 ## [0.2.32] - 2024-08-21
 
 - fix: `fav pull <res_id>` will now forcely pull the resource.

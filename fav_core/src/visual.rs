@@ -1,5 +1,5 @@
 //! Data visualize
-use crate::attr::{Attr, Count};
+use crate::attr::{Attr, Count, Owner};
 use crate::res::{Res, Set, Sets};
 use crate::status::{Status, StatusFlags};
 use tabled::{
@@ -44,16 +44,17 @@ where
 impl<T> TableSet for T
 where
     T: Set,
-    T::Res: Attr + Status,
+    T::Res: Attr + Status + Owner,
 {
     fn table(&self) {
-        let header = vec!["ID", "Title", "Track", "Saved"];
+        let header = vec!["ID", "Upper", "Title", "Track", "Saved"];
         let rows = self.iter().map(|res| {
             let id = String::from(res.id());
+            let upper = res.owner().to_string().chars().take(15).collect();
             let title = res.title().to_string().chars().take(15).collect();
             let track = res.check_status(StatusFlags::TRACK).to_string();
             let saved = res.check_status(StatusFlags::SAVED).to_string();
-            vec![id, title, track, saved]
+            vec![id, upper, title, track, saved]
         });
         show_table(header, rows);
     }
@@ -64,13 +65,14 @@ where
     T: Res,
 {
     fn table(&self) {
-        let header = vec!["ID", "Title", "Track", "Saved", "Expired"];
+        let header = vec!["ID", "Upper", "Title", "Track", "Saved", "Expired"];
         let id = String::from(self.id());
+        let upper = self.owner().to_string().chars().take(15).collect();
         let title = self.title().to_string().chars().take(15).collect();
         let track = self.check_status(StatusFlags::TRACK).to_string();
         let saved = self.check_status(StatusFlags::SAVED).to_string();
         let expired = self.check_status(StatusFlags::EXPIRED).to_string();
-        let rows = vec![vec![id, title, track, saved, expired]];
+        let rows = vec![vec![id, upper, title, track, saved, expired]];
         show_table(header, rows);
     }
 }
