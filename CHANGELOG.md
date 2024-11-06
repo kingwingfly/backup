@@ -9,6 +9,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+## [0.2.34] - 2024-11-06
+
+- bump dependencies
+
 ## [0.2.33] - 2024-09-05
 
 - fav status will show name of resource creator.
