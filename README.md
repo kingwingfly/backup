@@ -108,26 +108,26 @@ For Arch Linux users, you can `yay -S fav-git` maybe, someone has maken it a pac
 Need `ffmpeg` usable, and able to be directly called in cli.
 
 ```
-$ fav -h
 Fav's CLI, helping persist the remote source. Repo: https://github.com/kingwingfly/fav
 
-Usage: fav <COMMAND>
+Usage: fav [OPTIONS] <COMMAND>
 
 Commands:
   init        Initialize the folder for fav
   auth        Login your account
   fetch       Fetch from remote
-  status      Show status of local, default to show resource status
+  status      Show status of local, default to show sets' status
   track       Track a remote source
   untrack     Untrack a remote source
-  pull        Pull remote resource to local
+  pull        Pull remote resource to local.  If no id provided, then pull all and skip those having been saved
   daemon      Interval fetch and pull
   completion  Completions for the shell
   help        Print this message or the help of the given subcommand(s)
 
 Options:
-  -h, --help     Print help
-  -V, --version  Print version
+  -d, --working-dir <WORKING_DIR>  [default: /Users/louis]
+  -h, --help                       Print help
+  -V, --version                    Print version
 ```
 
 ### Steps
