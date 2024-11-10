@@ -164,6 +164,24 @@ $ fav daemon 30
 $ fav status -r | awk -F '│' '{print $3}' | grep -v '^\s*$' | sort | uniq -c | sort -n
 ```
 
+Service example:
+```ini
+# fav.service
+[Unit]
+Description=Fav Daemon Service
+After=network-online.target
+
+[Service]
+Type=simple
+User=your_user
+WorkingDirectory=/path/to/fav_set
+ExecStart=/usr/local/bin/fav daemon 180
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
 _For more examples, please refer to the [Documentation](https://github.com/kingwingfly/fav)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

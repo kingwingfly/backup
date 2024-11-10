@@ -1,10 +1,9 @@
 //! Config,
 //! helping managing the configuration
 
-use std::collections::HashMap;
-
 use crate::local::ProtoLocal;
 use reqwest::header::{HeaderMap, HeaderValue};
+use std::collections::HashMap;
 
 /// A HttpConfig, including headers and cookies.
 /// # Example

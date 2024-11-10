@@ -6,6 +6,7 @@ use action::*;
 use clap::{error::ErrorKind, CommandFactory as _, Parser, Subcommand, ValueHint};
 use fav_core::{local::ProtoLocal as _, FavCoreResult};
 use fav_utils::bili::BiliSets;
+use std::env::{current_dir, set_current_dir};
 use tracing::info;
 
 const VERSION: &str = const_format::formatcp!(
@@ -23,6 +24,8 @@ const VERSION: &str = const_format::formatcp!(
 #[derive(Parser)]
 #[command(author, version = VERSION, about)]
 pub struct Cli {
+    #[clap(short = 'd', long, default_value = current_dir().unwrap().into_os_string())]
+    working_dir: std::path::PathBuf,
     #[clap(subcommand)]
     subcmd: Commands,
 }
@@ -97,7 +100,7 @@ enum AuthCommand {
     Logout,
     /// Reuse the login info
     Reuse {
-        /// The path of .fav folder, example: /path/to/.fav
+        /// The path of .fav folder, example: /path/to/dir_containing_`.fav`
         #[arg(value_hint = ValueHint::DirPath)]
         path: std::path::PathBuf,
     },
@@ -107,6 +110,7 @@ impl Cli {
     /// Run the CLI.
     pub async fn run() -> FavCoreResult<()> {
         let args = Self::parse();
+        set_current_dir(args.working_dir)?;
         match args.subcmd {
             Commands::Init => init()?,
             Commands::Auth {
@@ -123,7 +127,8 @@ impl Cli {
                         match authcmd {
                             AuthCommand::Login => login().await?,
                             AuthCommand::Reuse { path } => {
-                                std::fs::hard_link(path.join("bili"), ".fav/bili")?;
+                                std::fs::hard_link(path.join("bili"), ".fav/bili")
+                                    .or(std::fs::hard_link(path.join(".fav/bili"), ".fav/bili"))?;
                                 info!("Reuse the login info from {}", path.display());
                             }
                             _ => unreachable!(),

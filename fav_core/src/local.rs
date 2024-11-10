@@ -4,6 +4,7 @@
 use crate::{ops::Net, res::Res, FavCoreResult};
 use core::future::Future;
 use protobuf::MessageFull;
+use std::path::PathBuf;
 use url::Url;
 
 /// Refer to a path on disk;
@@ -36,7 +37,7 @@ pub trait ProtoLocal: PathInfo + MessageFull {
     /// Write the protobuf to file, which is at `PathInfo::PATH`
     /// Create the parent directory if not exists
     fn write(&self) -> FavCoreResult<()> {
-        let path = std::path::PathBuf::from(Self::PATH);
+        let path = PathBuf::from(Self::PATH);
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent)?;
         }
@@ -47,14 +48,14 @@ pub trait ProtoLocal: PathInfo + MessageFull {
 
     /// Read the protobuf from file, which is at `PathInfo::PATH`
     fn read() -> FavCoreResult<Self> {
-        let path = std::path::PathBuf::from(Self::PATH);
+        let path = PathBuf::from(Self::PATH);
         let mut file = std::fs::File::open(path)?;
         Ok(Self::parse_from_reader(&mut file)?)
     }
 
     /// Remove the resource, which is at `PathInfo::PATH`
     fn remove() {
-        let path = std::path::PathBuf::from(Self::PATH);
+        let path = PathBuf::from(Self::PATH);
         std::fs::remove_file(path).ok(); // Just omit the result
     }
 }

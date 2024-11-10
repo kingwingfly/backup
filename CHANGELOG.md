@@ -9,6 +9,12 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+## [0.2.35] - 2024-11-10
+
+- enhance: `fav -d /path` to set working directory.
+- enhance: `fav auth reuse` can receive path both containing or not containing `.fav`.
+- enhance: add a systemd service example in README.
+
 ## [0.2.34] - 2024-11-06
 
 - bump dependencies
