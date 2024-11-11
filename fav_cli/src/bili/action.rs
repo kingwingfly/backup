@@ -194,7 +194,7 @@ pub(super) async fn pull(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult
     Ok(())
 }
 
-pub(super) async fn daemon(sets: &mut BiliSets, interval: u64) -> FavCoreResult<()> {
+pub(super) async fn daemon(interval: u64) -> FavCoreResult<()> {
     if interval < 15 {
         warn!("Interval would better to be greater than 15 minutes.");
     }
@@ -204,8 +204,12 @@ pub(super) async fn daemon(sets: &mut BiliSets, interval: u64) -> FavCoreResult<
     let mut fire: bool = true;
     loop {
         tokio::select! {
-            res = pull_all(sets), if fire => {
+            res = async {
+                let mut sets = BiliSets::read().unwrap_or_default();
+                pull_all(&mut sets).await?;
                 sets.write()?;
+                FavCoreResult::Ok(())
+            }, if fire => {
                 if let Err(e) = res {
                     error!("{}", e);
                 }

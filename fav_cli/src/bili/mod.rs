@@ -120,6 +120,10 @@ impl Cli {
                 let mut cmd = Cli::command();
                 clap_complete::generate(shell, &mut cmd, "fav", &mut std::io::stdout());
             }
+            Commands::Daemon { interval } => {
+                check_ffmpeg()?;
+                daemon(interval).await?;
+            }
             subcmd => {
                 let mut sets = BiliSets::read().unwrap_or_default();
                 let res = match subcmd {
@@ -169,10 +173,6 @@ impl Cli {
                             Some(ids) => pull(&mut sets, ids).await,
                             None => pull_all(&mut sets).await,
                         }
-                    }
-                    Commands::Daemon { interval } => {
-                        check_ffmpeg()?;
-                        daemon(&mut sets, interval).await
                     }
                     _ => unreachable!(),
                 };

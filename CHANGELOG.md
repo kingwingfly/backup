@@ -9,6 +9,11 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+## [0.2.36] - 2024-11-12
+
+- fix: `fav daemon` uses data cached in memory instead of reading again,
+leading to repeated pullings with `fav pull` called manually during daemon.
+
 ## [0.2.35] - 2024-11-10
 
 - enhance: `fav -d /path` to set working directory.
