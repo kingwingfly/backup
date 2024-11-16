@@ -77,9 +77,11 @@ Back up your favorite bilibili online resources with CLI.
 
 ## Getting Started
 
-You can download a release [here](https://github.com/kingwingfly/fav/releases).
+You can download the release [here](https://github.com/kingwingfly/fav/releases).
 
 For Arch Linux users, you can `yay -S fav-git` maybe, someone has maken it a package.
+
+Or you can compile by yourself:
 
 ### Prerequisites
 
