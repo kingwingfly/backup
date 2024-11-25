@@ -1,6 +1,6 @@
 [package]
 name = "fav_core"
-version = "0.1.6"
+version = "0.1.7"
 authors.workspace = true
 description = "Fav's core crate; A collection of traits."
 license.workspace = true
@@ -11,7 +11,6 @@ documentation = "https://docs.rs/fav_core"
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
