@@ -2,7 +2,7 @@
 name = "fav_cli"
 version.workspace = true
 authors.workspace = true
-description = "Fav's CLI, helping persist the remote source. Repo: https://github.com/kingwingfly/fav"
+description = "Fav's CLI, helping persist the remote resources. Repo: https://github.com/kingwingfly/fav"
 license.workspace = true
 edition.workspace = true
 repository.workspace = true
