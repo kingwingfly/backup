@@ -144,26 +144,26 @@ Options:
 
 ```sh
 # auto completion is supported; e.g. fish
-$ fav completion fish > ~/.config/fish/completions/fav.fish
+fav completion fish > ~/.config/fish/completions/fav.fish
 # For Windows users
-$ echo "fav completion powershell | Out-String | Invoke-Expression" >> $PROFILE
+echo "fav completion powershell | Out-String | Invoke-Expression" >> $PROFILE
 # init for bilibili
-$ fav init
+fav init
 # scan code to login
-$ fav auth login
+fav auth login
 # a fetch will auto run after login
 # show status
-$ fav status -s
+fav status -s
 # track list
-$ fav track <list_id>
+fav track <list_id>
 # fetch and pull videos
-$ fav pull
+fav pull
 # untrack list or video
-$ fav untrack <list_id/bvid>
+fav untrack <list_id/bvid>
 # daemon, run `fav pull` every 30 minutes
-$ fav daemon 30
+fav daemon 30
 # after fetching, you can find your favorite upper
-$ fav status -r | awk -F '│' '{print $3}' | grep -v '^\s*$' | sort | uniq -c | sort -n
+fav status -r | awk -F '│' '{print $3}' | grep -v '^\s*$' | sort | uniq -c | sort -n
 ```
 
 Service example:
