@@ -184,6 +184,8 @@ Restart=on-failure
 WantedBy=multi-user.target
 ```
 
+You can also achieve the goal with `systemd timer` by yourself, but it's a little hard to learn.
+
 _For more examples, please refer to the [Documentation](https://github.com/kingwingfly/fav)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
