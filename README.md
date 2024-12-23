@@ -122,7 +122,7 @@ Commands:
   track       Track a remote source
   untrack     Untrack a remote source
   pull        Pull remote resource to local.  If no id provided, then pull all and skip those having been saved
-  daemon      Interval fetch and pull
+  cron      Interval fetch and pull
   completion  Completions for the shell
   help        Print this message or the help of the given subcommand(s)
 
@@ -160,8 +160,8 @@ fav track <list_id>
 fav pull
 # untrack list or video
 fav untrack <list_id/bvid>
-# daemon, run `fav pull` every 30 minutes
-fav daemon 30
+# cron, run `fav pull` every 30 minutes
+fav cron 30
 # after fetching, you can find your favorite upper
 fav status -r | awk -F '│' '{print $3}' | grep -v '^\s*$' | sort | uniq -c | sort -n
 ```
@@ -170,14 +170,14 @@ Service example:
 ```ini
 # fav.service
 [Unit]
-Description=Fav Daemon Service
+Description=Fav Cron Service
 After=network-online.target
 
 [Service]
 Type=simple
 User=your_user
 WorkingDirectory=/path/to/fav_set
-ExecStart=/usr/local/bin/fav daemon 180
+ExecStart=/usr/local/bin/fav cron 180
 Restart=on-failure
 
 [Install]

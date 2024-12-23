@@ -79,7 +79,8 @@ enum Commands {
         id: Option<Vec<String>>,
     },
     /// Interval fetch and pull
-    Daemon {
+    #[clap(alias = "daemon")]
+    Cron {
         /// The interval to fetch and pull (in minutes, greater than 15)
         #[arg(value_hint = ValueHint::Other)]
         interval: u64,
@@ -120,9 +121,9 @@ impl Cli {
                 let mut cmd = Cli::command();
                 clap_complete::generate(shell, &mut cmd, "fav", &mut std::io::stdout());
             }
-            Commands::Daemon { interval } => {
+            Commands::Cron { interval } => {
                 check_ffmpeg()?;
-                daemon(interval).await?;
+                cron(interval).await?;
             }
             subcmd => {
                 let mut sets = BiliSets::read().unwrap_or_default();

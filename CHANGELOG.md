@@ -9,6 +9,11 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+## [0.2.38] - 2024-12-23
+
+- rename `fav daemon` to `fav cron`. And `fav daemon` is still available as an alias.
+- bump deps
+
 ## [0.2.37] - 2024-11-26
 
 - bump deps

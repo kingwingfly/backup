@@ -194,7 +194,7 @@ pub(super) async fn pull(sets: &mut BiliSets, ids: Vec<String>) -> FavCoreResult
     Ok(())
 }
 
-pub(super) async fn daemon(interval: u64) -> FavCoreResult<()> {
+pub(super) async fn cron(interval: u64) -> FavCoreResult<()> {
     if interval < 15 {
         warn!("Interval would better to be greater than 15 minutes.");
     }
