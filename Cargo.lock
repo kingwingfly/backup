@@ -389,7 +389,7 @@ checksum = "37909eebbb50d72f9059c3b6d82c0463f2ff062c9e95845c43a6c9c0355411be"
 
 [[package]]
 name = "fav"
-version = "0.2.38"
+version = "0.2.39"
 dependencies = [
  "fav_cli",
  "tokio",
@@ -399,7 +399,7 @@ dependencies = [
 
 [[package]]
 name = "fav_cli"
-version = "0.2.38"
+version = "0.2.39"
 dependencies = [
  "chrono",
  "clap",

@@ -3,7 +3,7 @@ use std::io;
 use tracing::{error, Level};
 use tracing_subscriber::{filter, prelude::*};
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
     let filter = filter::Targets::new()
         // Enable the `INFO` level for anything in `fav`

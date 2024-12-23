@@ -9,6 +9,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 -->
 
 ## [Unreleased]
+## [0.2.39] - 2024-12-23
+
+- tokio runtime: instead of using threads as the number of cpus, now use the single-threaded runtime.
+
 ## [0.2.38] - 2024-12-23
 
 - rename `fav daemon` to `fav cron`. And `fav daemon` is still available as an alias.
