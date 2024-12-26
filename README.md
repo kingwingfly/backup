@@ -122,7 +122,7 @@ Commands:
   track       Track a remote source
   untrack     Untrack a remote source
   pull        Pull remote resource to local.  If no id provided, then pull all and skip those having been saved
-  cron      Interval fetch and pull
+  cron        Interval fetch and pull
   completion  Completions for the shell
   help        Print this message or the help of the given subcommand(s)
 
