@@ -36,7 +36,7 @@ tokio-stream = { version = "0.1" }
 tokio-util = { version = "0.7" }
 futures = "0.3"
 # utils
-bitflags = "2.5"
+bitflags = "2.8"
 # tracing
 tracing = { version = "0.1" }
 
